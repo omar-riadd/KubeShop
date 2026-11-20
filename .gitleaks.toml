@@ -1,0 +1,18 @@
+title = "KubeShop gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow documentation placeholders and local test fixtures"
+regexes = [
+  '''<GH_OWNER>''',
+  '''<BASE_DOMAIN>''',
+  '''<AWS_ACCOUNT_ID>''',
+  '''<SLACK_WEBHOOK_URL>''',
+]
+paths = [
+  '''^docs/PLACEHOLDERS\.md$''',
+  '''^plan\.md$''',
+  '''^ui\.md$''',
+]

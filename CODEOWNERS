@@ -1,0 +1,10 @@
+# Default ownership (backend and platform)
+* @<GH_OWNER>
+
+# Frontend / UI ownership
+/web/ @<GH_OWNER>
+/.github/workflows/ci-web.yml @<GH_OWNER>
+/docs/ui/ @<GH_OWNER>
+
+# Production promotion requires explicit review
+/gitops/apps/envs/prod/ @<GH_OWNER>

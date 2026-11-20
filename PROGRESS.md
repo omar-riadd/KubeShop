@@ -3,7 +3,7 @@
 Combined build order following Shared Contract Milestones (M0 → M6) across `plan.md` (Backend/Platform) and `ui.md` (Frontend/UI).
 
 ## Milestone M0 — Repo Bootstrap & Contract
-- [ ] **B-00** — Backend Phase 0: Repo skeleton, `api/openapi.yaml`, `docs/PLACEHOLDERS.md`, `docs/CONTRACT-CHANGES.md`, `openapi-lint` CI, pre-commit config
+- [x] **B-00** — Backend Phase 0: Repo skeleton, `api/openapi.yaml`, `docs/PLACEHOLDERS.md`, `docs/CONTRACT-CHANGES.md`, `openapi-lint` CI, pre-commit config (Milestone M0 reached)
 
 ## Milestone M1 — Go Services & Local Stack
 - [ ] **B-01** — Backend Phase 1: Go services (`internal/platform`, `catalog`, `cart`, `orders`, unit/integration/contract/fault tests, Dockerfiles)

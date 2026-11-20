@@ -1,0 +1,1062 @@
+openapi: 3.1.0
+info:
+  title: KubeShop API
+  version: 1.0.0
+  description: |
+    HTTP API contract for KubeShop ("Gear for engineers") covering the Catalog, Cart, and Orders microservices.
+    Shared Contract v1.0 — single source of truth for backend and frontend.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: /
+    description: Same-origin API gateway
+tags:
+  - name: Catalog
+    description: Product catalog and categories
+  - name: Cart
+    description: Session-scoped shopping cart
+  - name: Orders
+    description: Order placement and history
+  - name: Version
+    description: Service build metadata and pod identity (exempt from fault injection)
+
+paths:
+  /api/catalog/products:
+    get:
+      operationId: listProducts
+      tags: [Catalog]
+      summary: List products with optional category, search query, and pagination
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - name: category
+          in: query
+          description: Filter by category ID
+          required: false
+          schema:
+            type: string
+            enum: [keyboards, mice, audio, accessories]
+        - name: q
+          in: query
+          description: Case-insensitive substring match on product name and description
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+        - name: limit
+          in: query
+          description: Maximum number of items to return (default 50, max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          description: Pagination offset (default 0)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of matching products sorted by id ascending
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/catalog/products/{id}:
+    get:
+      operationId: getProduct
+      tags: [Catalog]
+      summary: Get a single product by ID
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - name: id
+          in: path
+          required: true
+          description: Product identifier (e.g. kb-001)
+          schema:
+            type: string
+            pattern: '^[a-z]{2}-\d{3}$'
+      responses:
+        '200':
+          description: Product details
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/catalog/categories:
+    get:
+      operationId: listCategories
+      tags: [Catalog]
+      summary: List all product categories
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: List of categories
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/catalog/version:
+    get:
+      operationId: getCatalogVersion
+      tags: [Version]
+      summary: Get catalog service version and pod metadata
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: Catalog service version info
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /api/cart:
+    get:
+      operationId: getCart
+      tags: [Cart]
+      summary: Get the current session cart
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: Current cart (empty cart if none exists)
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/MissingSession'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: clearCart
+      tags: [Cart]
+      summary: Empty the current session cart
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: Empty cart
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/MissingSession'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/cart/items:
+    post:
+      operationId: addCartItem
+      tags: [Cart]
+      summary: Add quantity of a product to the cart
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItemRequest'
+      responses:
+        '200':
+          description: Updated cart
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/UpstreamUnavailable'
+        '504':
+          $ref: '#/components/responses/UpstreamTimeout'
+
+  /api/cart/items/{productId}:
+    put:
+      operationId: setCartItemQuantity
+      tags: [Cart]
+      summary: Set absolute quantity for a product in the cart (creates line if missing)
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - name: productId
+          in: path
+          required: true
+          description: Product identifier
+          schema:
+            type: string
+            pattern: '^[a-z]{2}-\d{3}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: Updated cart
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/UpstreamUnavailable'
+        '504':
+          $ref: '#/components/responses/UpstreamTimeout'
+    delete:
+      operationId: removeCartItem
+      tags: [Cart]
+      summary: Remove a product line from the cart (idempotent)
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - name: productId
+          in: path
+          required: true
+          description: Product identifier
+          schema:
+            type: string
+            pattern: '^[a-z]{2}-\d{3}$'
+      responses:
+        '200':
+          description: Updated cart
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/MissingSession'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/cart/version:
+    get:
+      operationId: getCartVersion
+      tags: [Version]
+      summary: Get cart service version and pod metadata
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: Cart service version info
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /api/orders:
+    post:
+      operationId: createOrder
+      tags: [Orders]
+      summary: Place an order from the current session cart
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Order created
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '200':
+          description: Idempotent replay of an existing order for the same (session, Idempotency-Key)
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '422':
+          $ref: '#/components/responses/CartEmpty'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/UpstreamUnavailable'
+        '504':
+          $ref: '#/components/responses/UpstreamTimeout'
+    get:
+      operationId: listOrders
+      tags: [Orders]
+      summary: List orders for the current session (newest first, max 50)
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: Session orders newest first
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+        '400':
+          $ref: '#/components/responses/MissingSession'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [Orders]
+      summary: Get a specific order by ID for the current session
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - name: id
+          in: path
+          required: true
+          description: Order UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order details
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/MissingSession'
+        '404':
+          $ref: '#/components/responses/OrderNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/orders/version:
+    get:
+      operationId: getOrdersVersion
+      tags: [Version]
+      summary: Get orders service version and pod metadata
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+      responses:
+        '200':
+          description: Orders service version info
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+components:
+  parameters:
+    SessionIdHeader:
+      name: X-Session-ID
+      in: header
+      required: true
+      description: Anonymous browser session identifier (UUID v4)
+      schema:
+        type: string
+        format: uuid
+    RequestIdHeader:
+      name: X-Request-ID
+      in: header
+      required: false
+      description: Per-request correlation ID ([A-Za-z0-9-], max 64 chars)
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9-]{1,64}$'
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-generated UUID to ensure idempotent order creation
+      schema:
+        type: string
+        format: uuid
+
+  headers:
+    X-Request-ID:
+      description: Echoed or server-generated request correlation ID
+      schema:
+        type: string
+    Cache-Control:
+      description: Always no-store for API responses
+      schema:
+        type: string
+        const: no-store
+
+  responses:
+    MethodNotAllowed:
+      description: HTTP method is not allowed for this route
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: METHOD_NOT_ALLOWED
+              message: Method not allowed
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    ValidationError:
+      description: Request validation failed or missing session
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Request validation failed
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+              details:
+                - field: customer.email
+                  message: must be a valid email address
+    MissingSession:
+      description: Missing or invalid X-Session-ID header
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: MISSING_SESSION
+              message: X-Session-ID header is required and must be a valid UUID v4
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    ProductNotFound:
+      description: Product does not exist
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: PRODUCT_NOT_FOUND
+              message: Product not found
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    OrderNotFound:
+      description: Order does not exist or belongs to another session
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: ORDER_NOT_FOUND
+              message: Order not found
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    CartEmpty:
+      description: Cannot place an order with an empty cart
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: CART_EMPTY
+              message: Cart is empty
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    InternalError:
+      description: Unexpected internal error or injected fault
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: INTERNAL_ERROR
+              message: An unexpected error occurred
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    UpstreamUnavailable:
+      description: Upstream service call failed
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: UPSTREAM_UNAVAILABLE
+              message: Upstream service unavailable
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    UpstreamTimeout:
+      description: Upstream service call timed out (> 2s)
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: UPSTREAM_TIMEOUT
+              message: Upstream service timed out
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+
+  schemas:
+    Product:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - description
+        - category
+        - priceCents
+        - currency
+        - imageUrl
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z]{2}-\d{3}$'
+          example: kb-001
+        name:
+          type: string
+          example: Nimbus 75 Mechanical Keyboard
+        description:
+          type: string
+          example: 75% hot-swappable board with gasket mount.
+        category:
+          type: string
+          enum: [keyboards, mice, audio, accessories]
+          example: keyboards
+        priceCents:
+          type: integer
+          minimum: 0
+          example: 8900
+        currency:
+          type: string
+          enum: [USD]
+          example: USD
+        imageUrl:
+          type: string
+          example: /images/products/kb-001.svg
+
+    ProductList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        total:
+          type: integer
+          minimum: 0
+          example: 12
+
+    Category:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - label
+      properties:
+        id:
+          type: string
+          enum: [keyboards, mice, audio, accessories]
+          example: keyboards
+        label:
+          type: string
+          example: Keyboards
+
+    CategoryList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    AddCartItemRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          minLength: 1
+          example: kb-001
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 1
+
+    UpdateCartItemRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 3
+
+    CartItem:
+      type: object
+      additionalProperties: false
+      required:
+        - productId
+        - name
+        - priceCents
+        - quantity
+        - lineTotalCents
+        - imageUrl
+      properties:
+        productId:
+          type: string
+          example: kb-001
+        name:
+          type: string
+          example: Nimbus 75 Mechanical Keyboard
+        priceCents:
+          type: integer
+          minimum: 0
+          example: 8900
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 2
+        lineTotalCents:
+          type: integer
+          minimum: 0
+          example: 17800
+        imageUrl:
+          type: string
+          example: /images/products/kb-001.svg
+
+    Cart:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - itemCount
+        - subtotalCents
+        - currency
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        itemCount:
+          type: integer
+          minimum: 0
+          example: 2
+        subtotalCents:
+          type: integer
+          minimum: 0
+          example: 17800
+        currency:
+          type: string
+          enum: [USD]
+          example: USD
+
+    Customer:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Ada Lovelace
+        email:
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 254
+          example: ada@example.com
+
+    ShippingAddress:
+      type: object
+      additionalProperties: false
+      required:
+        - line1
+        - city
+        - postalCode
+        - country
+      properties:
+        line1:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: 1 Analytical St
+        line2:
+          type: string
+          maxLength: 200
+          default: ''
+          example: ''
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: London
+        postalCode:
+          type: string
+          minLength: 1
+          maxLength: 20
+          example: N1 9GU
+        country:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          minLength: 2
+          maxLength: 2
+          example: GB
+
+    OrderRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - customer
+        - shippingAddress
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        shippingAddress:
+          $ref: '#/components/schemas/ShippingAddress'
+
+    OrderItem:
+      type: object
+      additionalProperties: false
+      required:
+        - productId
+        - name
+        - priceCents
+        - quantity
+        - lineTotalCents
+      properties:
+        productId:
+          type: string
+          example: kb-001
+        name:
+          type: string
+          example: Nimbus 75 Mechanical Keyboard
+        priceCents:
+          type: integer
+          minimum: 0
+          example: 8900
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 2
+        lineTotalCents:
+          type: integer
+          minimum: 0
+          example: 17800
+
+    Order:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - status
+        - items
+        - totalCents
+        - currency
+        - customer
+        - shippingAddress
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 0b7c1d0e-6f0a-4f43-9d52-2b7a7a2f9b11
+        status:
+          type: string
+          enum: [PLACED]
+          example: PLACED
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        totalCents:
+          type: integer
+          minimum: 0
+          example: 17800
+        currency:
+          type: string
+          enum: [USD]
+          example: USD
+        customer:
+          $ref: '#/components/schemas/Customer'
+        shippingAddress:
+          $ref: '#/components/schemas/ShippingAddress'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-11-20T10:15:30Z'
+
+    OrderList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+
+    Version:
+      type: object
+      additionalProperties: false
+      required:
+        - service
+        - version
+        - gitSha
+        - buildTime
+        - environment
+        - podName
+      properties:
+        service:
+          type: string
+          enum: [catalog, cart, orders]
+          example: catalog
+        version:
+          type: string
+          example: sha-3f2a9c1
+        gitSha:
+          type: string
+          example: 3f2a9c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b
+        buildTime:
+          type: string
+          example: '2026-11-20T09:58:00Z'
+        environment:
+          type: string
+          enum: [local, dev, staging, prod]
+          example: dev
+        podName:
+          type: string
+          example: catalog-6d5f8b7c9d-x2k4q
+
+    ErrorCode:
+      type: string
+      enum:
+        - VALIDATION_ERROR
+        - MISSING_SESSION
+        - PRODUCT_NOT_FOUND
+        - ORDER_NOT_FOUND
+        - NOT_FOUND
+        - METHOD_NOT_ALLOWED
+        - CART_EMPTY
+        - INTERNAL_ERROR
+        - FAULT_INJECTED
+        - UPSTREAM_UNAVAILABLE
+        - UPSTREAM_TIMEOUT
+
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          example: customer.email
+        message:
+          type: string
+          example: must be a valid email address
+
+    ErrorBody:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+        - requestId
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          example: Request validation failed
+        requestId:
+          type: string
+          example: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+
+    Error:
+      type: object
+      additionalProperties: false
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'

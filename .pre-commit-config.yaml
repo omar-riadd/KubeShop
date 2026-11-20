@@ -1,0 +1,29 @@
+repos:
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: gitleaks secret scan
+        entry: gitleaks protect --staged --redact --config .gitleaks.toml
+        language: system
+        pass_filenames: false
+
+      - id: yamllint
+        name: yamllint
+        entry: yamllint -c .yamllint.yml
+        language: system
+        types: [yaml]
+        exclude: ^deploy/charts/.*/templates/
+
+      - id: golangci-lint
+        name: golangci-lint
+        entry: bash -c 'cd services && golangci-lint run ./...'
+        language: system
+        files: ^services/.*\.go$
+        pass_filenames: false
+
+      - id: terraform-fmt
+        name: terraform fmt
+        entry: terraform fmt -check -recursive infra/terraform
+        language: system
+        files: ^infra/terraform/.*\.tf$
+        pass_filenames: false
