@@ -12,7 +12,7 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 ## UI Core, Backend Integration & Container
 - [x] **U-01** — UI Phase 1: Scaffold React 19 + TS + Vite + Tailwind v4, design tokens, base UI components, layout shell, MSW mocks, product SVGs
 - [x] **U-02** — UI Phase 2: All pages (§7), data layer (§8), forms, error handling, theme, accessibility, unit tests against MSW
-- [ ] **U-03** — UI Phase 3: Real backend integration (`pnpm gen:api`, delete `types.manual.ts`, Vite proxy, verify with `make dev-backend`)
+- [x] **U-03** — UI Phase 3: Real backend integration (`pnpm gen:api`, delete `types.manual.ts`, Vite proxy, verify with `make dev-backend`)
 - [ ] **U-04** — UI Phase 4: Production `web/Dockerfile`, `nginx.conf`, `40-runtime-config.sh`, read-only container check, Playwright e2e + axe suite against `make up`
 
 ## Milestone M2 — CI Pipelines
