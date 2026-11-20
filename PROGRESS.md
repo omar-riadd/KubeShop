@@ -7,7 +7,7 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 
 ## Milestone M1 — Go Services & Local Stack
 - [x] **B-01** — Backend Phase 1: Go services (`internal/platform`, `catalog`, `cart`, `orders`, unit/integration/contract/fault tests, Dockerfiles)
-- [ ] **B-02** — Backend Phase 2: Local stack (`docker-compose.yml`, `deploy/compose/gateway.nginx.conf`, `Makefile`) & end-to-end curl check
+- [x] **B-02** — Backend Phase 2: Local stack (`docker-compose.yml`, `deploy/compose/gateway.nginx.conf`, `Makefile`) & end-to-end curl check (Milestone M1 reached)
 
 ## UI Core, Backend Integration & Container
 - [ ] **U-01** — UI Phase 1: Scaffold React 19 + TS + Vite + Tailwind v4, design tokens, base UI components, layout shell, MSW mocks, product SVGs
