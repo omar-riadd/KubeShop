@@ -6,7 +6,7 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **B-00** — Backend Phase 0: Repo skeleton, `api/openapi.yaml`, `docs/PLACEHOLDERS.md`, `docs/CONTRACT-CHANGES.md`, `openapi-lint` CI, pre-commit config (Milestone M0 reached)
 
 ## Milestone M1 — Go Services & Local Stack
-- [ ] **B-01** — Backend Phase 1: Go services (`internal/platform`, `catalog`, `cart`, `orders`, unit/integration/contract/fault tests, Dockerfiles)
+- [x] **B-01** — Backend Phase 1: Go services (`internal/platform`, `catalog`, `cart`, `orders`, unit/integration/contract/fault tests, Dockerfiles)
 - [ ] **B-02** — Backend Phase 2: Local stack (`docker-compose.yml`, `deploy/compose/gateway.nginx.conf`, `Makefile`) & end-to-end curl check
 
 ## UI Core, Backend Integration & Container
