@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-au-001" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="12" fill="url(#bg-au-001)" />
+  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+  
+        <path d="M140,160 A60,60 0 0,1 260,160" fill="none" stroke="#8b5cf6" stroke-width="6"/>
+        <rect x="130" y="150" width="20" height="40" rx="6" fill="#8b5cf6"/>
+        <rect x="250" y="150" width="20" height="40" rx="6" fill="#8b5cf6"/>
+      
+  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Tracer Studio Headphones</text>
+  <text x="200" y="265" font-family="monospace" font-size="12" fill="#8b5cf6" text-anchor="middle">AU-001</text>
+</svg>

@@ -10,8 +10,8 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **B-02** — Backend Phase 2: Local stack (`docker-compose.yml`, `deploy/compose/gateway.nginx.conf`, `Makefile`) & end-to-end curl check (Milestone M1 reached)
 
 ## UI Core, Backend Integration & Container
-- [ ] **U-01** — UI Phase 1: Scaffold React 19 + TS + Vite + Tailwind v4, design tokens, base UI components, layout shell, MSW mocks, product SVGs
-- [ ] **U-02** — UI Phase 2: All pages (§7), data layer (§8), forms, error handling, theme, accessibility, unit tests against MSW
+- [x] **U-01** — UI Phase 1: Scaffold React 19 + TS + Vite + Tailwind v4, design tokens, base UI components, layout shell, MSW mocks, product SVGs
+- [x] **U-02** — UI Phase 2: All pages (§7), data layer (§8), forms, error handling, theme, accessibility, unit tests against MSW
 - [ ] **U-03** — UI Phase 3: Real backend integration (`pnpm gen:api`, delete `types.manual.ts`, Vite proxy, verify with `make dev-backend`)
 - [ ] **U-04** — UI Phase 4: Production `web/Dockerfile`, `nginx.conf`, `40-runtime-config.sh`, read-only container check, Playwright e2e + axe suite against `make up`
 

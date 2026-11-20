@@ -1,0 +1,124 @@
+import type { Category, Product } from '../api/types';
+
+export const mockCategories: Category[] = [
+  { id: 'keyboards', label: 'Keyboards' },
+  { id: 'mice', label: 'Mice' },
+  { id: 'audio', label: 'Audio' },
+  { id: 'accessories', label: 'Accessories' },
+];
+
+export const mockProducts: Product[] = [
+  {
+    id: 'kb-001',
+    name: 'Nimbus 75 Mechanical Keyboard',
+    description: '75% hot-swappable mechanical keyboard with gasket mount and PBT keycaps.',
+    category: 'keyboards',
+    priceCents: 8900,
+    currency: 'USD',
+    imageUrl: '/images/products/kb-001.svg',
+  },
+  {
+    id: 'kb-002',
+    name: 'Helm 60 Wireless Keyboard',
+    description: 'Compact 60% wireless keyboard with dual-mode Bluetooth and low-latency 2.4 GHz.',
+    category: 'keyboards',
+    priceCents: 7400,
+    currency: 'USD',
+    imageUrl: '/images/products/kb-002.svg',
+  },
+  {
+    id: 'kb-003',
+    name: 'Pod TKL Low-Profile Keyboard',
+    description: 'Tenkeyless low-profile aluminum keyboard tuned for long coding sessions.',
+    category: 'keyboards',
+    priceCents: 9900,
+    currency: 'USD',
+    imageUrl: '/images/products/kb-003.svg',
+  },
+  {
+    id: 'ms-001',
+    name: 'Orbit Ergonomic Mouse',
+    description:
+      'Sculpted ergonomic wireless mouse with silent switches and horizontal scroll wheel.',
+    category: 'mice',
+    priceCents: 5900,
+    currency: 'USD',
+    imageUrl: '/images/products/ms-001.svg',
+  },
+  {
+    id: 'ms-002',
+    name: 'Ingress Vertical Mouse',
+    description: '57-degree vertical mouse designed to reduce wrist strain during all-day work.',
+    category: 'mice',
+    priceCents: 6900,
+    currency: 'USD',
+    imageUrl: '/images/products/ms-002.svg',
+  },
+  {
+    id: 'ms-003',
+    name: 'Sidecar Compact Mouse',
+    description: 'Ultralight travel mouse that slips into any laptop sleeve with USB-C charging.',
+    category: 'mice',
+    priceCents: 3900,
+    currency: 'USD',
+    imageUrl: '/images/products/ms-003.svg',
+  },
+  {
+    id: 'au-001',
+    name: 'Tracer Studio Headphones',
+    description: 'Closed-back studio headphones with neutral tuning and memory-foam ear cushions.',
+    category: 'audio',
+    priceCents: 14900,
+    currency: 'USD',
+    imageUrl: '/images/products/au-001.svg',
+  },
+  {
+    id: 'au-002',
+    name: 'Span Noise-Cancelling Earbuds',
+    description:
+      'Active noise-cancelling true wireless earbuds with multipoint laptop and phone pairing.',
+    category: 'audio',
+    priceCents: 11900,
+    currency: 'USD',
+    imageUrl: '/images/products/au-002.svg',
+  },
+  {
+    id: 'au-003',
+    name: 'Mesh USB Microphone',
+    description: 'Cardioid USB-C condenser microphone with hardware mute button and shock mount.',
+    category: 'audio',
+    priceCents: 8400,
+    currency: 'USD',
+    imageUrl: '/images/products/au-003.svg',
+  },
+  {
+    id: 'ac-001',
+    name: 'Rollout Desk Mat XL',
+    description:
+      'Extended wool-felt and rubber desk mat sized for a full keyboard and mouse setup.',
+    category: 'accessories',
+    priceCents: 2900,
+    currency: 'USD',
+    imageUrl: '/images/products/ac-001.svg',
+  },
+  {
+    id: 'ac-002',
+    name: 'Cluster USB-C Hub',
+    description:
+      '8-in-1 aluminum USB-C hub with 4K HDMI, Gigabit Ethernet, and 100W power delivery.',
+    category: 'accessories',
+    priceCents: 6400,
+    currency: 'USD',
+    imageUrl: '/images/products/ac-002.svg',
+  },
+  {
+    id: 'ac-003',
+    name: 'Namespace Monitor Light Bar',
+    description:
+      'Asymmetric LED monitor light bar that illuminates your desk with zero screen glare.',
+    category: 'accessories',
+    priceCents: 4900,
+    currency: 'USD',
+    imageUrl: '/images/products/ac-003.svg',
+  },
+];

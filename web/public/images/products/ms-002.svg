@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-ms-002" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="12" fill="url(#bg-ms-002)" />
+  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+  
+        <rect x="160" y="100" width="80" height="110" rx="40" fill="none" stroke="#059669" stroke-width="4"/>
+        <line x1="200" y1="100" x2="200" y2="140" stroke="#059669" stroke-width="4"/>
+        <circle cx="200" cy="125" r="4" fill="#059669"/>
+      
+  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Ingress Vertical Mouse</text>
+  <text x="200" y="265" font-family="monospace" font-size="12" fill="#059669" text-anchor="middle">MS-002</text>
+</svg>

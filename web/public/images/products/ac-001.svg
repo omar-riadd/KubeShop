@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-ac-001" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="12" fill="url(#bg-ac-001)" />
+  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+  
+        <rect x="130" y="110" width="140" height="80" rx="8" fill="none" stroke="#f59e0b" stroke-width="4"/>
+        <circle cx="200" cy="150" r="20" fill="none" stroke="#f59e0b" stroke-width="4"/>
+      
+  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Rollout Desk Mat XL</text>
+  <text x="200" y="265" font-family="monospace" font-size="12" fill="#f59e0b" text-anchor="middle">AC-001</text>
+</svg>

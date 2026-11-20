@@ -1,0 +1,154 @@
+import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, ShoppingCart, Check } from 'lucide-react';
+import { useProduct } from '../api/catalog';
+import { useAddToCart } from '../api/cart';
+import { useToast } from '../components/ui/Toast';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { QuantityStepper } from '../components/ui/QuantityStepper';
+import { Skeleton } from '../components/ui/Skeleton';
+import { ErrorState } from '../components/ui/ErrorState';
+import { Money } from '../components/ui/Money';
+import { NotFoundPage } from './NotFoundPage';
+import { getUserErrorMessage } from '../api/errors';
+
+export const ProductPage: React.FC = () => {
+  const { id = '' } = useParams<{ id: string }>();
+  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
+
+  // Validate ID format before calling API per §7
+  const isValidId = /^[a-z]{2}-\d{3}$/.test(id);
+
+  const { data: product, isLoading, error, refetch } = useProduct(isValidId ? id : '');
+  const addToCartMutation = useAddToCart();
+  const { showToast } = useToast();
+
+  if (!isValidId) {
+    return <NotFoundPage />;
+  }
+
+  if (error) {
+    const { message, requestId } = getUserErrorMessage(error);
+    if (message === "That product doesn't exist.") {
+      return <NotFoundPage />;
+    }
+    return <ErrorState message={message} requestId={requestId} onRetry={() => refetch()} />;
+  }
+
+  if (isLoading || !product) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="w-32 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <Skeleton className="w-full h-80 rounded-md" />
+          <div className="space-y-4">
+            <Skeleton className="w-20 h-6" />
+            <Skeleton className="w-3/4 h-10" />
+            <Skeleton className="w-24 h-8" />
+            <Skeleton className="w-full h-24" />
+            <Skeleton className="w-48 h-10" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAddToCart = async () => {
+    try {
+      await addToCartMutation.mutateAsync({ productId: product.id, quantity });
+      setAdded(true);
+      showToast({
+        type: 'success',
+        message: `Added ${quantity} × ${product.name} to cart.`,
+      });
+      setTimeout(() => setAdded(false), 2000);
+    } catch (err: unknown) {
+      const { message, requestId } = getUserErrorMessage(err);
+      showToast({
+        type: 'error',
+        message: `Failed to add to cart: ${message}`,
+        requestId,
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-text-muted hover:text-text transition-colors"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Back to catalog
+      </Link>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        {/* Product image */}
+        <div className="bg-surface border border-border rounded-md overflow-hidden p-6 flex items-center justify-center">
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            width={400}
+            height={300}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = '/images/placeholder.svg';
+            }}
+            className="w-full max-h-80 object-contain rounded-md"
+          />
+        </div>
+
+        {/* Product details */}
+        <div className="space-y-6">
+          <div>
+            <Badge variant="default" className="capitalize text-xs mb-2">
+              {product.category}
+            </Badge>
+            <h1 data-testid="product-title" className="text-2xl sm:text-3xl font-bold text-text">
+              {product.name}
+            </h1>
+            <div className="mt-3">
+              <Money
+                cents={product.priceCents}
+                currency={product.currency}
+                className="text-2xl font-bold text-primary"
+              />
+            </div>
+          </div>
+
+          <p className="text-sm text-text-muted leading-relaxed border-t border-b border-border py-4">
+            {product.description}
+          </p>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <label htmlFor="qty-input" className="text-sm font-medium text-text">
+                Quantity:
+              </label>
+              <QuantityStepper
+                id="qty-input"
+                data-testid="qty-input"
+                value={quantity}
+                onChange={setQuantity}
+                min={1}
+                max={20}
+              />
+            </div>
+
+            <Button
+              data-testid="add-to-cart"
+              size="lg"
+              className="w-full sm:w-auto min-w-48 gap-2"
+              onClick={handleAddToCart}
+              loading={addToCartMutation.isPending}
+            >
+              {added ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+              {added ? 'Added!' : 'Add to cart'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
