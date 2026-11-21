@@ -1,0 +1,108 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kubeshop-baseline
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - env: dev
+          - env: staging
+          - env: prod
+  template:
+    metadata:
+      name: "baseline-{{ .env }}"
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
+    spec:
+      project: kubeshop
+      source:
+        repoURL: https://github.com/<GH_OWNER>/kubeshop-platform.git
+        targetRevision: main
+        path: deploy/charts/env-baseline
+        helm:
+          valueFiles:
+            - "../../../gitops/apps/envs/{{ .env }}/baseline.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "kubeshop-{{ .env }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        managedNamespaceMetadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
+            kubeshop.io/gateway-access: "true"
+            kubeshop.io/env: "{{ .env }}"
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kubeshop-apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - env: dev
+                - env: staging
+                - env: prod
+          - list:
+              elements:
+                - app: catalog
+                - app: cart
+                - app: orders
+                - app: web
+  template:
+    metadata:
+      name: "{{ .app }}-{{ .env }}"
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      project: kubeshop
+      source:
+        repoURL: https://github.com/<GH_OWNER>/kubeshop-platform.git
+        targetRevision: main
+        path: deploy/charts/app
+        helm:
+          valueFiles:
+            - "../../../gitops/apps/base/{{ .app }}.yaml"
+            - "../../../gitops/apps/envs/{{ .env }}/{{ .app }}.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "kubeshop-{{ .env }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        managedNamespaceMetadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
+            kubeshop.io/gateway-access: "true"
+            kubeshop.io/env: "{{ .env }}"
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m

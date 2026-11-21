@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kubeshop-env-baseline
+description: Per-environment baseline for KubeShop (quotas, NetworkPolicies, Redis, CloudNativePG, ExternalSecrets, synthetic traffic)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

@@ -1,0 +1,74 @@
+environment: dev
+
+vpcCidr: "10.0.0.0/16"
+
+# Prod workloads schedule onto the dedicated on-demand node group.
+nodeSelector: {}
+tolerations: []
+
+quota:
+  enabled: true
+  requestsCpu: "4"
+  requestsMemory: "4Gi"
+  limitsCpu: "8"
+  limitsMemory: "8Gi"
+  pods: "30"
+
+limitRange:
+  enabled: true
+  defaultCpu: "250m"
+  defaultMemory: "256Mi"
+  defaultRequestCpu: "50m"
+  defaultRequestMemory: "64Mi"
+
+externalSecret:
+  enabled: true
+  secretStoreName: aws-secrets-manager
+  refreshInterval: 1h
+
+redis:
+  enabled: true
+  image:
+    repository: docker.io/library/redis
+    tag: 7.4-alpine
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+postgres:
+  enabled: true
+  name: orders-db
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2
+  storage:
+    size: 5Gi
+    storageClass: gp3
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  enablePodMonitor: true
+
+syntheticTraffic:
+  enabled: true
+  image:
+    repository: docker.io/grafana/k6
+    tag: 0.56.0
+    pullPolicy: IfNotPresent
+  ratePerSecond: "1"
+  orderProbability: "0.15"
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi

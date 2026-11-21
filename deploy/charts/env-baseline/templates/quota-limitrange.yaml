@@ -1,0 +1,33 @@
+{{- if .Values.quota.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: kubeshop-quota
+  labels:
+    {{- include "baseline.commonLabels" . | nindent 4 }}
+spec:
+  hard:
+    requests.cpu: {{ .Values.quota.requestsCpu | quote }}
+    requests.memory: {{ .Values.quota.requestsMemory | quote }}
+    limits.cpu: {{ .Values.quota.limitsCpu | quote }}
+    limits.memory: {{ .Values.quota.limitsMemory | quote }}
+    pods: {{ .Values.quota.pods | quote }}
+{{- end }}
+---
+{{- if .Values.limitRange.enabled }}
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: kubeshop-limits
+  labels:
+    {{- include "baseline.commonLabels" . | nindent 4 }}
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: {{ .Values.limitRange.defaultCpu }}
+        memory: {{ .Values.limitRange.defaultMemory }}
+      defaultRequest:
+        cpu: {{ .Values.limitRange.defaultRequestCpu }}
+        memory: {{ .Values.limitRange.defaultRequestMemory }}
+{{- end }}

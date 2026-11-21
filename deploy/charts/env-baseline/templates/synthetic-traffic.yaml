@@ -1,0 +1,160 @@
+{{- if .Values.syntheticTraffic.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: synthetic-traffic
+  labels:
+    app.kubernetes.io/name: synthetic-traffic
+    {{- include "baseline.commonLabels" . | nindent 4 }}
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: synthetic-traffic-script
+  labels:
+    app.kubernetes.io/name: synthetic-traffic
+    {{- include "baseline.commonLabels" . | nindent 4 }}
+data:
+  traffic.js: |
+    import http from 'k6/http';
+    import { check, sleep } from 'k6';
+
+    const RATE = Number(__ENV.RATE_PER_SECOND || '1');
+    const ORDER_PROB = Number(__ENV.ORDER_PROBABILITY || '0.15');
+    const PRODUCTS = ['kb-001', 'kb-002', 'ms-001', 'au-001', 'ac-001'];
+
+    export const options = {
+      scenarios: {
+        steady: {
+          executor: 'constant-arrival-rate',
+          rate: RATE,
+          timeUnit: '1s',
+          duration: '8760h',
+          preAllocatedVUs: 2,
+          maxVUs: 6,
+        },
+      },
+    };
+
+    function uuidv4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    }
+
+    export default function () {
+      const sessionId = uuidv4();
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Session-ID': sessionId,
+        'X-Request-ID': uuidv4(),
+      };
+
+      const listRes = http.get('http://catalog/api/catalog/products', { headers });
+      check(listRes, { 'catalog 200': (r) => r.status === 200 });
+
+      const productId = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+      const addRes = http.post(
+        'http://cart/api/cart/items',
+        JSON.stringify({ productId, quantity: 1 }),
+        { headers }
+      );
+      check(addRes, { 'cart add 200': (r) => r.status === 200 });
+
+      if (Math.random() < ORDER_PROB) {
+        const orderHeaders = Object.assign({}, headers, {
+          'Idempotency-Key': uuidv4(),
+          'X-Request-ID': uuidv4(),
+        });
+        const orderRes = http.post(
+          'http://orders/api/orders',
+          JSON.stringify({
+            customer: { name: 'Synthetic Probe', email: 'probe@example.com' },
+            shippingAddress: {
+              line1: '1 Probe Way',
+              line2: '',
+              city: 'Frankfurt',
+              postalCode: '60311',
+              country: 'DE',
+            },
+          }),
+          { headers: orderHeaders }
+        );
+        check(orderRes, { 'order placed': (r) => r.status === 201 || r.status === 200 });
+      }
+      sleep(0.1);
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synthetic-traffic
+  labels:
+    app.kubernetes.io/name: synthetic-traffic
+    {{- include "baseline.commonLabels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: synthetic-traffic
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: synthetic-traffic
+        {{- include "baseline.commonLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: synthetic-traffic
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 12345
+        runAsGroup: 12345
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: k6
+          image: "{{ .Values.syntheticTraffic.image.repository }}:{{ .Values.syntheticTraffic.image.tag }}"
+          imagePullPolicy: {{ .Values.syntheticTraffic.image.pullPolicy }}
+          args:
+            - run
+            - --quiet
+            - /scripts/traffic.js
+          env:
+            - name: RATE_PER_SECOND
+              value: {{ .Values.syntheticTraffic.ratePerSecond | quote }}
+            - name: ORDER_PROBABILITY
+              value: {{ .Values.syntheticTraffic.orderProbability | quote }}
+            - name: HOME
+              value: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.syntheticTraffic.resources | nindent 12 }}
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: script
+          configMap:
+            name: synthetic-traffic-script
+        - name: tmp
+          emptyDir: {}
+{{- end }}

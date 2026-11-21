@@ -1,0 +1,18 @@
+environment: staging
+
+quota:
+  requestsCpu: "6"
+  requestsMemory: "6Gi"
+  limitsCpu: "12"
+  limitsMemory: "12Gi"
+  pods: "40"
+
+postgres:
+  instances: 1
+  storage:
+    size: 10Gi
+
+syntheticTraffic:
+  enabled: true
+  ratePerSecond: "1"
+  orderProbability: "0.15"

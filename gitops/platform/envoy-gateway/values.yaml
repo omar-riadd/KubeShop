@@ -1,0 +1,11 @@
+# Envoy Gateway installs Gateway API CRDs once; no separate Gateway API CRD app is used.
+deployment:
+  replicas: 1
+  envoyGateway:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

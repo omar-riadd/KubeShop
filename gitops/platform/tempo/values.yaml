@@ -1,0 +1,17 @@
+tempo:
+  retention: 168h
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: http://kube-prometheus-stack-prometheus.monitoring.svc:9090/api/v1/write
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+persistence:
+  enabled: true
+  storageClassName: gp3
+  size: 10Gi

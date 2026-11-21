@@ -1,0 +1,177 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-helm-addons
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          # Wave 0: Core operators, CRDs, and monitoring
+          - name: cert-manager
+            namespace: cert-manager
+            repoURL: https://charts.jetstack.io
+            chart: cert-manager
+            version: v1.21.3
+            wave: "0"
+          - name: external-secrets
+            namespace: external-secrets
+            repoURL: https://charts.external-secrets.io
+            chart: external-secrets
+            version: 2.15.0
+            wave: "0"
+          - name: kyverno
+            namespace: kyverno
+            repoURL: https://kyverno.github.io/kyverno/
+            chart: kyverno
+            version: 3.10.0
+            wave: "0"
+          - name: argo-rollouts
+            namespace: argo-rollouts
+            repoURL: https://argoproj.github.io/argo-helm
+            chart: argo-rollouts
+            version: 2.43.12
+            wave: "0"
+          - name: cloudnative-pg
+            namespace: cnpg-system
+            repoURL: https://cloudnative-pg.github.io/charts
+            chart: cloudnative-pg
+            version: 0.29.2
+            wave: "0"
+          - name: keda
+            namespace: keda
+            repoURL: https://kedacore.github.io/charts
+            chart: keda
+            version: 2.21.1
+            wave: "0"
+          - name: kube-prometheus-stack
+            namespace: monitoring
+            repoURL: https://prometheus-community.github.io/helm-charts
+            chart: kube-prometheus-stack
+            version: 93.6.1
+            wave: "0"
+          # Wave 1: Gateway (installs Gateway API CRDs once), DNS, Observability, FinOps
+          - name: envoy-gateway
+            namespace: envoy-gateway-system
+            repoURL: docker.io/envoyproxy
+            chart: gateway-helm
+            version: v1.10.0
+            wave: "1"
+          - name: external-dns
+            namespace: external-dns
+            repoURL: https://kubernetes-sigs.github.io/external-dns/
+            chart: external-dns
+            version: 1.24.0
+            wave: "1"
+          - name: loki
+            namespace: observability
+            repoURL: https://grafana.github.io/helm-charts
+            chart: loki
+            version: 7.7.0
+            wave: "1"
+          - name: tempo
+            namespace: observability
+            repoURL: https://grafana.github.io/helm-charts
+            chart: tempo
+            version: 1.24.4
+            wave: "1"
+          - name: alloy
+            namespace: observability
+            repoURL: https://grafana.github.io/helm-charts
+            chart: alloy
+            version: 1.16.0
+            wave: "1"
+          - name: otel-collector
+            namespace: observability
+            repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+            chart: opentelemetry-collector
+            version: 0.181.0
+            wave: "1"
+          - name: opencost
+            namespace: opencost
+            repoURL: https://opencost.github.io/opencost-helm-chart
+            chart: opencost
+            version: 2.5.34
+            wave: "1"
+  template:
+    metadata:
+      name: "platform-{{ .name }}"
+      annotations:
+        argocd.argoproj.io/sync-wave: "{{ .wave }}"
+    spec:
+      project: platform
+      sources:
+        - repoURL: "{{ .repoURL }}"
+          chart: "{{ .chart }}"
+          targetRevision: "{{ .version }}"
+          helm:
+            valueFiles:
+              - "$values/gitops/platform/{{ .name }}/values.yaml"
+        - repoURL: https://github.com/<GH_OWNER>/kubeshop-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .namespace }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 15s
+            factor: 2
+            maxDuration: 5m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-manifests
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - name: cert-manager
+            namespace: cert-manager
+          - name: envoy-gateway
+            namespace: gateway-system
+          - name: external-secrets
+            namespace: external-secrets
+          - name: argo-rollouts
+            namespace: argo-rollouts
+  template:
+    metadata:
+      name: "platform-{{ .name }}-manifests"
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+    spec:
+      project: platform
+      source:
+        repoURL: https://github.com/<GH_OWNER>/kubeshop-platform.git
+        targetRevision: main
+        path: "gitops/platform/{{ .name }}/manifests"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .namespace }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 15s
+            factor: 2
+            maxDuration: 5m

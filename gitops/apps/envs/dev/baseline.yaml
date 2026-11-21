@@ -1,0 +1,11 @@
+environment: dev
+
+postgres:
+  instances: 1
+  storage:
+    size: 5Gi
+
+syntheticTraffic:
+  enabled: true
+  ratePerSecond: "1"
+  orderProbability: "0.15"

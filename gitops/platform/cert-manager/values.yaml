@@ -1,0 +1,17 @@
+crds:
+  enabled: true
+
+config:
+  enableGatewayAPI: true
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/kubeshop-cert-manager
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
