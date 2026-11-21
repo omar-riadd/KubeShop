@@ -150,6 +150,8 @@ spec:
             namespace: argo-rollouts
           - name: kube-prometheus-stack
             namespace: monitoring
+          - name: kyverno
+            namespace: kyverno
   template:
     metadata:
       name: "platform-{{ .name }}-manifests"

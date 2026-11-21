@@ -1,0 +1,41 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: pod-security-hardening
+  annotations:
+    policies.kyverno.io/title: Pod Security Hardening (Non-Root, ReadOnlyRootFS, Drop ALL, Seccomp)
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: high
+spec:
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubeshop.io/env
+          operator: Exists
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  validations:
+    - expression: >-
+        (has(object.spec.securityContext) && object.spec.securityContext.?runAsNonRoot.orValue(false) == true) ||
+        object.spec.containers.all(c, has(c.securityContext) && c.securityContext.?runAsNonRoot.orValue(false) == true)
+      message: "Pods must run as non-root (runAsNonRoot: true)."
+    - expression: >-
+        object.spec.containers.all(c, has(c.securityContext) && c.securityContext.?readOnlyRootFilesystem.orValue(false) == true)
+      message: "All containers must set securityContext.readOnlyRootFilesystem: true."
+    - expression: >-
+        object.spec.containers.all(c,
+          has(c.securityContext) &&
+          c.securityContext.?allowPrivilegeEscalation.orValue(true) == false &&
+          has(c.securityContext.capabilities) &&
+          'ALL' in c.securityContext.capabilities.?drop.orValue([])
+        )
+      message: "All containers must set allowPrivilegeEscalation: false and drop ALL capabilities."
+    - expression: >-
+        (has(object.spec.securityContext) && has(object.spec.securityContext.seccompProfile) && object.spec.securityContext.seccompProfile.type in ['RuntimeDefault', 'Localhost']) ||
+        object.spec.containers.all(c, has(c.securityContext) && has(c.securityContext.seccompProfile) && c.securityContext.seccompProfile.type in ['RuntimeDefault', 'Localhost'])
+      message: "Pods must set seccompProfile.type to RuntimeDefault or Localhost."

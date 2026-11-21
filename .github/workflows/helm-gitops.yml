@@ -31,7 +31,7 @@ jobs:
       - name: Install kubeconform & kyverno CLI
         run: |
           curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar -xz -C /usr/local/bin kubeconform
-          curl -sSL https://github.com/kyverno/kyverno/releases/download/v1.13.4/kyverno-cli_v1.13.4_linux_x86_64.tar.gz | tar -xz -C /usr/local/bin kyverno
+          curl -sSL https://github.com/kyverno/kyverno/releases/download/v1.20.0/kyverno-cli_v1.20.0_linux_x86_64.tar.gz | tar -xz -C /usr/local/bin kyverno
 
       - name: Lint Helm charts
         run: |

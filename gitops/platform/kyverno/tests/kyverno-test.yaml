@@ -1,0 +1,67 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: kubeshop-kyverno-policies
+policies:
+  - ../manifests/require-resources.yaml
+  - ../manifests/disallow-latest-tag.yaml
+  - ../manifests/restrict-registries.yaml
+  - ../manifests/pod-security-hardening.yaml
+  - ../manifests/require-labels.yaml
+resources:
+  - resources.yaml
+variables: values.yaml
+results:
+  # Compliant KubeShop pod passes every policy
+  - policy: require-resources
+    resources:
+      - kubeshop-dev/compliant-catalog-pod
+    kind: Pod
+    result: pass
+  - policy: disallow-latest-tag
+    resources:
+      - kubeshop-dev/compliant-catalog-pod
+    kind: Pod
+    result: pass
+  - policy: restrict-registries
+    resources:
+      - kubeshop-dev/compliant-catalog-pod
+    kind: Pod
+    result: pass
+  - policy: pod-security-hardening
+    resources:
+      - kubeshop-dev/compliant-catalog-pod
+    kind: Pod
+    result: pass
+  - policy: require-labels
+    resources:
+      - kubeshop-dev/compliant-catalog-pod
+    kind: Pod
+    result: pass
+
+  # Non-compliant pods fail their corresponding policies
+  - policy: require-resources
+    resources:
+      - kubeshop-dev/bad-no-resources-pod
+    kind: Pod
+    result: fail
+  - policy: disallow-latest-tag
+    resources:
+      - kubeshop-dev/bad-latest-tag-pod
+    kind: Pod
+    result: fail
+  - policy: restrict-registries
+    resources:
+      - kubeshop-dev/bad-untrusted-registry-pod
+    kind: Pod
+    result: fail
+  - policy: pod-security-hardening
+    resources:
+      - kubeshop-dev/bad-privileged-pod
+    kind: Pod
+    result: fail
+  - policy: require-labels
+    resources:
+      - kubeshop-dev/bad-missing-labels-pod
+    kind: Pod
+    result: fail

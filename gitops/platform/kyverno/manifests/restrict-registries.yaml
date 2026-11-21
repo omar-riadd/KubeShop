@@ -1,0 +1,30 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-registries
+  annotations:
+    policies.kyverno.io/title: Restrict Allowed Container Registries
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: high
+spec:
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubeshop.io/env
+          operator: Exists
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  validations:
+    - expression: >-
+        object.spec.containers.all(c,
+          c.image.startsWith('ghcr.io/<GH_OWNER>/kubeshop-') ||
+          c.image.startsWith('ghcr.io/cloudnative-pg/postgresql:') ||
+          c.image.startsWith('docker.io/library/redis:') ||
+          c.image.startsWith('docker.io/grafana/k6:')
+        )
+      message: "Images must come from approved KubeShop registries (ghcr.io/<GH_OWNER>/kubeshop-*, ghcr.io/cloudnative-pg/postgresql, docker.io/library/redis, docker.io/grafana/k6)."
