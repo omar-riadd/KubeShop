@@ -259,7 +259,7 @@ Categories: `keyboards` "Keyboards", `mice` "Mice", `audio` "Audio", `accessorie
   - `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
 - **API services** set `X-Content-Type-Options: nosniff` and `Cache-Control: no-store`.
 - Consequences for the UI: no inline `<script>`, no inline `style` attributes or `style={{}}` props, no CDN scripts, fonts or images (self-host everything), no `eval`.
-- All pods: non-root, `readOnlyRootFilesystem: true`, all capabilities dropped, `seccompProfile: RuntimeDefault`, no service-account token mounted. The web container may write **only** to `/tmp` (an `emptyDir`).
+- All KubeShop application pods (`web`, `catalog`, `cart`, `orders`, `synthetic-traffic`): non-root, `readOnlyRootFilesystem: true`, all capabilities dropped, `seccompProfile: RuntimeDefault`, no service-account token mounted. The web container may write **only** to `/tmp` (an `emptyDir`). (Third-party data pods such as Redis and the CloudNativePG database follow the same Pod Security level but may need their own service account or token; see plan.md §11 and §13.)
 - Allowed `localStorage` keys: `kubeshop.sessionId` and `kubeshop.theme` (`"light"|"dark"|"system"`). Nothing else. No PII in logs, no secrets in the browser.
 
 ### 1.12 Build, images, CI interface
@@ -335,7 +335,7 @@ web/
   Dockerfile  nginx/{nginx.conf,default.conf.template?}  docker-entrypoint.d/40-runtime-config.sh
   package.json  pnpm-lock.yaml  vite.config.ts  tsconfig.json  eslint.config.js  .prettierrc
   index.html  README.md
-  public/images/products/{kb-001..ac-003}.svg  public/images/placeholder.svg  public/favicon.svg
+  public/images/products/{kb-001..ac-003}.svg  public/images/placeholder.svg  public/favicon.svg  public/theme-init.js   # classic script, see §6
   dev-public/mockServiceWorker.js          # served in dev only; must NOT end up in the production build
   scripts/generate-product-images.mjs
   src/
@@ -389,7 +389,7 @@ All text/background pairs must meet WCAG 2.1 AA (4.5:1; 3:1 for large text and U
 - **Skip link** ("Skip to content") as first focusable element. Header collapses to a menu button below `md`.
 - **Env badge:** hidden for `prod`; visible for `local` (gray), `dev` (amber), `staging` (purple). It never relies on color alone (text inside).
 - **Cart badge** (`data-testid="cart-badge"`): `itemCount` from `GET /api/cart`; hidden when 0; announces changes via an `aria-live="polite"` region.
-- **Theme toggle:** light / dark / system, stored in `localStorage["kubeshop.theme"]`. Apply the class before first paint **without an inline script** (set it from a small external module loaded synchronously in `<head>`, `src/lib/theme.ts` bundled as a normal script; CSP allows `'self'`). Avoid flash of wrong theme.
+- **Theme toggle:** light / dark / system, stored in `localStorage["kubeshop.theme"]`. Apply the class before first paint **without an inline script**: a tiny **classic (non-module)** file `public/theme-init.js` loaded from `<head>` with a plain `<script src="/theme-init.js"></script>` (module scripts are deferred and would flash the wrong theme; CSP allows `'self'`). `src/lib/theme.ts` handles later changes.
 - **Global error boundary** (friendly full-page error with Reload) and an **offline banner** using `navigator.onLine`.
 - **Document title** per route (`<Page> · KubeShop`) and focus moved to the main heading on route change.
 
@@ -544,7 +544,7 @@ Never show raw server messages for 5xx. Always show the request ID so it can be 
 - `location = /healthz` → `200 ok` (`text/plain`), no access log.
 - `location = /runtime-config.json` → `alias /tmp/runtime-config.json`, `Cache-Control: no-store`, `application/json`.
 - `location /assets/` (hashed files) → `Cache-Control: public, max-age=31536000, immutable`; **missing files return 404, never `index.html`** (prevents blueGreen/rollout mismatches turning into HTML-instead-of-JS errors).
-- `location /images/` → `Cache-Control: public, max-age=86400`.
+- `location /images/` → `Cache-Control: public, max-age=86400`. `location = /theme-init.js` → `Cache-Control: no-cache`.
 - Any path with a file extension that does not exist → 404. Everything else → `try_files $uri /index.html` with `Cache-Control: no-cache` on `index.html`.
 - `location /api/` → `404` (these requests belong to the Gateway; nginx never proxies).
 - Security headers **exactly** as in §1.11 (CSP string must match character for character). Use `add_header ... always` and repeat headers inside any `location` that sets its own `add_header` (nginx does not inherit them).

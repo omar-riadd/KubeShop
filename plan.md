@@ -257,7 +257,7 @@ Categories: `keyboards` "Keyboards", `mice` "Mice", `audio` "Audio", `accessorie
   - `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
 - **API services** set `X-Content-Type-Options: nosniff` and `Cache-Control: no-store`.
 - Consequences for the UI: no inline `<script>`, no inline `style` attributes or `style={{}}` props, no CDN scripts, fonts or images (self-host everything), no `eval`.
-- All pods: non-root, `readOnlyRootFilesystem: true`, all capabilities dropped, `seccompProfile: RuntimeDefault`, no service-account token mounted. The web container may write **only** to `/tmp` (an `emptyDir`).
+- All KubeShop application pods (`web`, `catalog`, `cart`, `orders`, `synthetic-traffic`): non-root, `readOnlyRootFilesystem: true`, all capabilities dropped, `seccompProfile: RuntimeDefault`, no service-account token mounted. The web container may write **only** to `/tmp` (an `emptyDir`). (Third-party data pods such as Redis and the CloudNativePG database follow the same Pod Security level but may need their own service account or token; see plan.md §11 and §13.)
 - Allowed `localStorage` keys: `kubeshop.sessionId` and `kubeshop.theme` (`"light"|"dark"|"system"`). Nothing else. No PII in logs, no secrets in the browser.
 
 ### 1.12 Build, images, CI interface
@@ -306,7 +306,7 @@ Categories: `keyboards` "Keyboards", `mice` "Mice", `audio` "Audio", `accessorie
 
 **In scope (v1):** 3 Go microservices, Postgres + Redis, one EKS cluster with 3 environments (namespaces), Terraform, GitHub Actions, Argo CD, Argo Rollouts, Gateway API, Prometheus/Grafana/Loki/Tempo/OpenTelemetry, Kyverno, External Secrets, KEDA/HPA, k6, OpenCost.
 
-**Out of scope (v1):** auth, payments, multi-cluster, service mesh, GPU/LLM workloads, Backstage. Stretch ideas live in §12.
+**Out of scope (v1):** auth, payments, multi-cluster, service mesh, GPU/LLM workloads, Backstage. Stretch ideas live in §17.
 
 **Why these choices (write each as an ADR in `docs/adr/`):** Argo CD vs Flux · Gateway API (Envoy Gateway) instead of ingress-nginx, because the ingress-nginx project was announced as retired in 2026 and Gateway API is the current direction · Kyverno vs OPA Gatekeeper · GHCR + Cosign keyless vs ECR · one cluster, three namespaces (cost) · External Secrets + AWS Secrets Manager vs Vault · blueGreen for the SPA, canary for APIs · single shared Helm chart.
 
@@ -317,7 +317,7 @@ Categories: `keyboards` "Keyboards", `mice` "Mice", `audio` "Audio", `accessorie
 | Language | Go | latest stable, ≥ 1.24. Router `chi`, logging `log/slog`, DB `pgx/v5`, Redis `go-redis/v9`, migrations `golang-migrate`, metrics `prometheus/client_golang`, tracing OpenTelemetry Go SDK + `otelhttp` |
 | API spec | OpenAPI 3.1 | `api/openapi.yaml`, validated in CI |
 | Containers | multi-stage Dockerfile, `gcr.io/distroless/static:nonroot` (or Chainguard static) | uid 65532 |
-| IaC | Terraform ≥ 1.10 (OpenTofu compatible) | S3 backend with native locking (`use_lockfile`); community modules `terraform-aws-modules/vpc` and `eks` |
+| IaC | Terraform ≥ 1.11 (OpenTofu compatible) | S3 backend with native locking (`use_lockfile`); community modules `terraform-aws-modules/vpc` and `eks` |
 | Cluster | Amazon EKS | latest standard-support Kubernetes version; EBS CSI, VPC CNI with network policy enabled, metrics-server |
 | CI | GitHub Actions | OIDC to AWS, no static cloud keys |
 | GitOps | Argo CD + ApplicationSets, Argo Rollouts (+ Gateway API traffic-router plugin) | |
@@ -474,12 +474,14 @@ All third-party actions pinned to full commit SHAs (Renovate keeps them current)
 | Workflow | Triggers | Steps |
 |---|---|---|
 | `ci-services.yml` | PR and push touching `services/**`, `api/**` | matrix `[catalog, cart, orders]`: `go vet`, `golangci-lint`, `go test -race -cover`, integration tests, OpenAPI contract tests, then call `_publish-image.yml` (`push: false` on PR, `true` on `main`) |
-| `_publish-image.yml` (reusable) | `workflow_call` | buildx build with `GIT_SHA`/`BUILD_TIME`, Trivy image scan (fail on fixable HIGH/CRITICAL), Syft SBOM (CycloneDX), push to GHCR, **Cosign keyless sign by digest**, `cosign attest` SBOM, SLSA provenance via `actions/attest-build-provenance`, then on `main` open an auto-merge PR editing `gitops/apps/envs/dev/<app>.yaml` → `image.tag: sha-<7>` |
+| `_publish-image.yml` (reusable) | `workflow_call` | buildx build with `GIT_SHA`/`BUILD_TIME`, Trivy image scan (fail on fixable HIGH/CRITICAL), Syft SBOM (CycloneDX), push to GHCR, **Cosign keyless sign by digest**, `cosign attest` SBOM, SLSA provenance via `actions/attest-build-provenance`, then on `main` open an auto-merge PR editing `gitops/apps/envs/dev/<app>.yaml` → `image.tag: sha-<7>` (**using a GitHub App token**, see gotcha below) |
 | `security.yml` | PR, weekly | Gitleaks (full history), Semgrep (`p/golang`, `p/typescript`, `p/dockerfile`, `p/secrets`), Trivy `config` over `infra/`, `deploy/`, `gitops/` |
 | `helm-gitops.yml` | PR touching `deploy/**`, `gitops/**` | `helm lint`, `helm template` for each app × env, `kubeconform` against Gateway API/Argo/Kyverno CRD schemas, `kyverno test gitops/platform/kyverno/tests` |
 | `terraform.yml` | PR touching `infra/**` | `fmt -check`, `validate`, `tflint`, Trivy config; `plan` via OIDC read-only role with plan commented on the PR; `apply` only via `workflow_dispatch` behind a protected GitHub Environment |
 | `promote.yml` | `workflow_dispatch` (inputs: `from`, `to`, `apps`) | reads `image.tag` of each app from `envs/<from>/`, opens a PR editing `envs/<to>/` (no direct pushes). `prod` target requires CODEOWNER approval |
 | `openapi-lint.yml` | PR touching `api/**` | Spectral/Redocly |
+
+**Gotcha: bot PRs and required checks.** Pull requests opened with the default `GITHUB_TOKEN` do **not** trigger other workflows, so required status checks never run and auto-merge stays blocked. Create the dev bump PR and the `promote.yml` PRs with a **GitHub App installation token** (`actions/create-github-app-token`; fine-grained PAT as a fallback), store its credentials as repo secrets, and document the setup in `docs/runbooks/repo-setup.md`. Never give the bot permission to bypass branch protection for `staging` or `prod` paths.
 
 Repo settings (document in `docs/runbooks/repo-setup.md`): protected `main`, required checks, required review, linear history, Dependabot/Renovate enabled, secret scanning and push protection on.
 
@@ -495,8 +497,9 @@ Rendered objects:
 - `Rollout` (not Deployment). `strategy: canary` → steps `setWeight 10 → pause 1m + analysis → 50 → pause 2m + analysis → 100`; stable and canary Services; Gateway API traffic routing via the Argo Rollouts plugin editing the `HTTPRoute`. `strategy: blueGreen` → active and preview Services, `autoPromotionEnabled: false` in prod, pre-promotion analysis hitting `/healthz`.
 - `HTTPRoute` attached to Gateway `kubeshop-gw`, host `<env host from §1.3>`, `PathPrefix` per §1.4. Response header filter adds nothing except what §1.4 allows. Prod: `BackendTrafficPolicy` local rate limit 30 req/s per client IP on `/api`.
 - Pod spec: security context per §1.11, `automountServiceAccountToken: false`, `terminationGracePeriodSeconds: 30`, `preStop: sleep 5`, probes per §1.5, env per §1.12 (`APP_ENV`, `APP_VERSION` from `image.tag`, `POD_NAME`), `/tmp` emptyDir when `volumes.tmpEmptyDir` (always on for `web`), topology spread across zones/nodes, labels `app.kubernetes.io/*`.
+- `Service` objects expose two ports: `http` (80 → 8080) and, for backends, `admin` (9090, **named `admin`**). The Rollout's `metadata.name` **equals the app name** (`catalog`, `cart`, `orders`, `web`) so pod names are `<app>-<hash>-<rand>`, which the canary analysis queries rely on.
 - `ServiceMonitor` scraping port `admin` `/metrics` (backends only). Adds the `pod` label.
-- `HPA` or KEDA `ScaledObject` (target kind `Rollout`, `apiVersion: argoproj.io/v1alpha1`), `PodDisruptionBudget`, `NetworkPolicy` per §10.
+- `HPA` or KEDA `ScaledObject` (target kind `Rollout`, `apiVersion: argoproj.io/v1alpha1`), `PodDisruptionBudget`, `NetworkPolicy` per §13.
 - Migration `Job` as an Argo CD **PreSync** hook (orders only), runs `orders migrate`.
 
 Resources and scaling per environment (set in `gitops/apps/base/` and `envs/`):
@@ -506,7 +509,7 @@ Resources and scaling per environment (set in `gitops/apps/base/` and `envs/`):
 | backends | `50m/64Mi` → `250m/128Mi` | 1 replica, no autoscale | HPA 1–5 (CPU 70 %); orders uses KEDA | min 2, HPA 2–6; orders KEDA 2–6 |
 | web | `25m/32Mi` → `100m/64Mi` | 1 | 1 | 2 |
 
-Prod pods get `nodeSelector: workload=prod` and a matching toleration (§11). Dev and staging run on the spot node group.
+Prod pods get `nodeSelector: workload=prod` and a matching toleration (node groups: §10). Dev and staging run on the spot node group.
 
 Acceptance (**M3**): `helm template` for every app × env passes `kubeconform`; the `web` render has an `/tmp` emptyDir, port 8080, `/healthz` probes, blueGreen strategy, route `/`.
 
@@ -526,7 +529,7 @@ Acceptance (**M3**): `helm template` for every app × env passes `kubeconform`; 
 
 Quality: `terraform fmt`, `validate`, `tflint`, Trivy config clean; variables documented; outputs for cluster name, region, role ARNs.
 
-Acceptance: `terraform validate` and `plan` succeed (against a sandbox account if the human approves); README in `infra/terraform` explains apply and the **teardown order** (§13).
+Acceptance: `terraform validate` and `plan` succeed (against a sandbox account if the human approves); README in `infra/terraform` explains apply and the **teardown order** (§15).
 
 ## 11. Phase 6: GitOps and platform addons (→ milestone M4, part 2)
 
@@ -538,12 +541,14 @@ Acceptance: `terraform validate` and `plan` succeed (against a sandbox account i
 |---|---|
 | 0 | `gateway-api` CRDs, `cert-manager`, `external-secrets`, `kyverno`, `argo-rollouts` (with Gateway API plugin config), `cloudnative-pg`, `keda`, `kube-prometheus-stack` (`monitoring`) |
 | 1 | `envoy-gateway`, `external-dns`, `loki`, `tempo`, `alloy`, `otel-collector` (`observability`), `opencost` |
-| 2 (manifests) | `ClusterIssuer` (Let's Encrypt, Route 53 DNS-01), `Gateway kubeshop-gw` (listeners 80 → redirect, 443 with wildcard `*.<BASE_DOMAIN>` cert; `allowedRoutes` from namespaces labelled `kubeshop.io/gateway-access=true`), `ClusterSecretStore aws-secrets-manager`, Kyverno policies, PrometheusRules, dashboards, `ClusterAnalysisTemplate`s (`success-rate`, `latency-p95`; args `service-name`, `namespace`, `canary-hash`, PromQL filters `pod=~"<service>-<canary-hash>-.*"`) |
+| 2 (manifests) | `ClusterIssuer` (Let's Encrypt, Route 53 DNS-01), `GatewayClass eg` with `parametersRef` → an `EnvoyProxy` resource whose Service annotations make the AWS Load Balancer Controller provision an internet-facing **NLB** (`service.beta.kubernetes.io/aws-load-balancer-type: external`, `...-nlb-target-type: ip`, `...-scheme: internet-facing`), `Gateway kubeshop-gw` in namespace `gateway-system` (listeners 80 → redirect, 443 with wildcard `*.<BASE_DOMAIN>` cert issued via the `cert-manager.io/cluster-issuer` annotation; cert-manager must have Gateway API support enabled; `allowedRoutes` from namespaces labelled `kubeshop.io/gateway-access=true`), `ClusterSecretStore aws-secrets-manager`, Kyverno policies, PrometheusRules, dashboards, `ClusterAnalysisTemplate`s (`success-rate`, `latency-p95`; args `service-name`, `namespace`, `canary-hash`, PromQL filters `pod=~"<service>-<canary-hash>-.*"`) |
+
+Install the **Gateway API CRDs exactly once** (either via the Envoy Gateway chart or a separate app, never both) and pin the Gateway API version supported by both Envoy Gateway and the Argo Rollouts Gateway API plugin.
 
 **`gitops/apps/applicationset.yaml`:** matrix of envs × apps. Each Application uses chart `deploy/charts/app` with `valueFiles: [base/<app>.yaml, envs/<env>/<app>.yaml]`, destination namespace `kubeshop-<env>`, managed namespace labels:
 `pod-security.kubernetes.io/enforce=restricted`, `kubeshop.io/gateway-access=true`, `kubeshop.io/env=<env>`. A `baseline-<env>` Application installs `deploy/charts/env-baseline`.
 
-**`deploy/charts/env-baseline`:** default-deny NetworkPolicies, `ResourceQuota`, `LimitRange`, Redis (Deployment + Service `redis`, password from the `cart-redis` secret, `--appendonly no`), CNPG `Cluster` named `orders-db` (1 instance dev/staging, 2 prod; creates secret `orders-db-app` whose `uri` key feeds `DATABASE_URL`), `ExternalSecret`s (`cart-redis`), and `synthetic-traffic` (k6 Deployment, ConfigMap script browsing → cart → occasional order, rate configurable, ~1 req/s).
+**`deploy/charts/env-baseline`:** default-deny NetworkPolicies, `ResourceQuota`, `LimitRange`, Redis (Deployment + Service `redis`, password from the `cart-redis` secret, started with `--save "" --appendonly no`, `/data` as an `emptyDir`), CNPG `Cluster` named `orders-db` (1 instance dev/staging, 2 prod; creates secret `orders-db-app` whose `uri` key feeds `DATABASE_URL`), `ExternalSecret`s (`cart-redis`), and `synthetic-traffic` (k6 Deployment, ConfigMap script browsing → cart → occasional order, rate configurable, ~1 req/s). **Every manifest in this chart** (Redis, CNPG `Cluster`, k6) must set explicit resource requests and limits, a restricted-compliant `securityContext`, and use an image from an allowed registry, otherwise the Pod Security and Kyverno rules of §13 will reject it. Set `resources` and `securityContext` in the CNPG `Cluster` spec.
 
 **Promotion model:** dev changes via the bot PR (auto-merge after checks). staging and prod changes only through PRs created by `promote.yml`. No one edits clusters by hand. Document in `docs/runbooks/promotion.md`.
 
@@ -585,14 +590,16 @@ Acceptance (**M5a**): the Service RED dashboard shows live data for all three se
 - **Network policies** (chart + baseline): default deny ingress and egress; allow only:
   - `envoy-gateway-system` → `web|catalog|cart|orders` on 8080
   - `monitoring` → backends on 9090
-  - `cart` → `catalog:8080`, `redis:6379`; `orders` → `cart:8080`, `orders-db:5432`
+  - `cart` → `catalog:8080`, `redis:6379`; `orders` → `cart:8080`, `orders-db:5432` (the migration Job pod carries the labels of `orders`, so the same rule applies)
+  - **CloudNativePG:** `cnpg-system` → `orders-db` pods (8000, 5432); `orders-db` pods ↔ each other (5432, 8000); `orders-db` pods → the Kubernetes API (TCP 443, restrict to the VPC CIDR); `monitoring` → `orders-db` metrics port if enabled. Without these the database never becomes healthy under default-deny.
+  - Redis accepts ingress only from `cart`.
   - all pods → kube-dns (UDP/TCP 53); backends → `otel-collector:4317`
   - `synthetic-traffic` → the four services
 - **RBAC:** one ServiceAccount per workload, no token mounted, no ClusterRole bindings for apps; Argo CD projects as above; Terraform roles least-privilege.
 - **Secrets:** only via External Secrets; nothing sensitive in Git; Gitleaks in pre-commit and CI.
 - **Supply chain:** pinned actions and base images (digest), Renovate, SBOM, provenance, signed images, Trivy gates.
 
-Acceptance (**M5b**): deploying an unsigned image to `kubeshop-dev` is rejected (or reported in Audit mode, then enforced); `kyverno test` passes; `kubectl exec` into a pod shows read-only filesystem.
+Acceptance (**M5b**): deploying an unsigned image to `kubeshop-dev` is rejected (or reported in Audit mode, then enforced); `kyverno test` passes; `kubectl exec` into a pod shows read-only filesystem; a throwaway pod in `kubeshop-dev` cannot reach `redis:6379` or `orders-db:5432`; in prod the two-instance `orders-db` still replicates and the app works end to end.
 
 ## 14. Phase 9: Reliability, rollouts, FinOps (→ milestone M5, part 3)
 
