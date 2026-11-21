@@ -1,0 +1,66 @@
+name: Helm & GitOps Validation
+
+on:
+  pull_request:
+    paths:
+      - 'deploy/**'
+      - 'gitops/**'
+      - '.github/workflows/helm-gitops.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/**'
+      - 'gitops/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Helm Lint, Kubeconform & Kyverno Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install Helm
+        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
+        with:
+          version: v3.17.3
+
+      - name: Install kubeconform & kyverno CLI
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar -xz -C /usr/local/bin kubeconform
+          curl -sSL https://github.com/kyverno/kyverno/releases/download/v1.13.4/kyverno-cli_v1.13.4_linux_x86_64.tar.gz | tar -xz -C /usr/local/bin kyverno
+
+      - name: Lint Helm charts
+        run: |
+          if [ -d deploy/charts/app ]; then
+            helm lint deploy/charts/app
+          fi
+          if [ -d deploy/charts/env-baseline ]; then
+            helm lint deploy/charts/env-baseline
+          fi
+
+      - name: Render Helm templates and validate with kubeconform
+        run: |
+          if [ -d deploy/charts/app ] && [ -d gitops/apps/base ]; then
+            for env in dev staging prod; do
+              for app in catalog cart orders web; do
+                if [ -f "gitops/apps/base/${app}.yaml" ] && [ -f "gitops/apps/envs/${env}/${app}.yaml" ]; then
+                  echo "Validating ${app} (${env})..."
+                  helm template "${app}" deploy/charts/app \
+                    --namespace "kubeshop-${env}" \
+                    -f "gitops/apps/base/${app}.yaml" \
+                    -f "gitops/apps/envs/${env}/${app}.yaml" \
+                    | kubeconform -strict -ignore-missing-schemas -summary
+                fi
+              done
+            done
+          fi
+
+      - name: Run Kyverno policy tests
+        run: |
+          if [ -d gitops/platform/kyverno/tests ]; then
+            kyverno test gitops/platform/kyverno/tests
+          fi

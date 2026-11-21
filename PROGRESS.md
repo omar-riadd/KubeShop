@@ -16,8 +16,8 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **U-04** — UI Phase 4: Production `web/Dockerfile`, `nginx.conf`, `40-runtime-config.sh`, read-only container check, Playwright e2e + axe suite against `make up`
 
 ## Milestone M2 — CI Pipelines
-- [ ] **B-03** — Backend Phase 3: CI workflows (`ci-services.yml`, `_publish-image.yml`, `security.yml`, `helm-gitops.yml`, `terraform.yml`, `promote.yml`), `renovate.json`, `docs/runbooks/repo-setup.md`
-- [ ] **U-05** — UI Phase 5: UI CI workflow (`.github/workflows/ci-web.yml`)
+- [x] **B-03** — Backend Phase 3: CI workflows (`ci-services.yml`, `_publish-image.yml`, `security.yml`, `helm-gitops.yml`, `terraform.yml`, `promote.yml`), `renovate.json`, `docs/runbooks/repo-setup.md`
+- [x] **U-05** — UI Phase 5: UI CI workflow (`.github/workflows/ci-web.yml`)
 
 ## Milestone M3 — Helm Chart
 - [ ] **B-04** — Backend Phase 4: Shared Helm chart `deploy/charts/app` + `values.schema.json` + base/env values + `kubeconform` validation

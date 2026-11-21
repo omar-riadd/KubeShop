@@ -1,0 +1,168 @@
+name: Publish Signed Image (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: 'Application name in gitops/apps/envs/dev/<app>.yaml (catalog, cart, orders, web)'
+        required: true
+        type: string
+      image-name:
+        description: 'GHCR image name (e.g. kubeshop-catalog, kubeshop-web)'
+        required: true
+        type: string
+      context:
+        description: 'Docker build context directory'
+        required: true
+        type: string
+      dockerfile:
+        description: 'Path to Dockerfile'
+        required: true
+        type: string
+      push:
+        description: 'Push to GHCR, sign with Cosign, and open dev GitOps bump PR'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-and-publish:
+    name: Build, Scan & Publish (${{ inputs.app }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Compute image metadata
+        id: meta
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          IMAGE="ghcr.io/${OWNER_LOWER}/${{ inputs.image-name }}"
+          TAG="sha-${SHORT_SHA}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "full_ref=${IMAGE}:${TAG}" >> "$GITHUB_OUTPUT"
+          echo "build_time=${BUILD_TIME}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Log in to GHCR
+        if: inputs.push
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image locally for vulnerability scanning
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          load: true
+          push: false
+          tags: ${{ steps.meta.outputs.full_ref }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ steps.meta.outputs.build_time }}
+          cache-from: type=gha,scope=${{ inputs.app }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.app }}
+
+      - name: Scan image with Trivy (fail on fixable HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        with:
+          image-ref: ${{ steps.meta.outputs.full_ref }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
+      - name: Generate CycloneDX SBOM with Syft
+        uses: anchore/sbom-action@78fc58e266e87a38d4194b2137a3d4e9bcaf7ca1 # v0.19.0
+        with:
+          image: ${{ steps.meta.outputs.full_ref }}
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Push image to GHCR
+        if: inputs.push
+        id: push
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.full_ref }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ steps.meta.outputs.build_time }}
+          cache-from: type=gha,scope=${{ inputs.app }}
+
+      - name: Install Cosign
+        if: inputs.push
+        uses: sigstore/cosign-installer@3454372f433991a10242f85129269be17805a23e # v3.8.1
+
+      - name: Sign image by digest (keyless OIDC) and attest SBOM
+        if: inputs.push
+        env:
+          IMAGE_DIGEST_REF: ${{ steps.meta.outputs.image }}@${{ steps.push.outputs.digest }}
+        run: |
+          cosign sign --yes "${IMAGE_DIGEST_REF}"
+          cosign attest --yes --type cyclonedx --predicate sbom.cdx.json "${IMAGE_DIGEST_REF}"
+
+      - name: Generate SLSA build provenance attestation
+        if: inputs.push
+        uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
+        with:
+          subject-name: ${{ steps.meta.outputs.image }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Mint GitHub App token for GitOps PR (triggers required checks)
+        if: inputs.push && vars.GITOPS_BOT_ENABLED == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        with:
+          app-id: ${{ secrets.GITOPS_BOT_APP_ID }}
+          private-key: ${{ secrets.GITOPS_BOT_PRIVATE_KEY }}
+
+      - name: Open auto-merge GitOps PR for dev environment
+        if: inputs.push && vars.GITOPS_BOT_ENABLED == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP: ${{ inputs.app }}
+          NEW_TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          VALUES_FILE="gitops/apps/envs/dev/${APP}.yaml"
+          if [ ! -f "${VALUES_FILE}" ]; then
+            echo "Values file ${VALUES_FILE} not found; skipping dev bump PR."
+            exit 0
+          fi
+          BRANCH="gitops/dev-${APP}-${NEW_TAG}"
+          git config user.name "kubeshop-gitops-bot[bot]"
+          git config user.email "kubeshop-gitops-bot[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          sed -i -E "s|^([[:space:]]*tag:[[:space:]]*).*|\1${NEW_TAG}|" "${VALUES_FILE}"
+          if git diff --quiet "${VALUES_FILE}"; then
+            echo "No tag change detected."
+            exit 0
+          fi
+          git add "${VALUES_FILE}"
+          git commit -m "chore(gitops): bump dev/${APP} to ${NEW_TAG}"
+          git push origin "${BRANCH}"
+          PR_URL=$(gh pr create \
+            --title "chore(gitops): bump dev/${APP} to ${NEW_TAG}" \
+            --body "Automated image bump for \`${APP}\` in \`dev\` to \`${NEW_TAG}\` (commit \`${GITHUB_SHA}\`)." \
+            --base main \
+            --head "${BRANCH}")
+          gh pr merge --auto --squash "${PR_URL}" || true

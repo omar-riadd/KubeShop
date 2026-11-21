@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommits",
+    ":dependencyDashboard"
+  ],
+  "schedule": ["before 6am on Monday"],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Group Go minor/patch updates",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "go minor and patch dependencies"
+    },
+    {
+      "description": "Group web pnpm minor/patch updates",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["web/package.json"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "web minor and patch dependencies"
+    },
+    {
+      "description": "Pin Docker base images by digest",
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
+    },
+    {
+      "description": "Group GitHub Actions digest updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Group Terraform provider and module updates",
+      "matchManagers": ["terraform"],
+      "groupName": "terraform modules and providers"
+    }
+  ]
+}

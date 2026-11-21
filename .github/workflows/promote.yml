@@ -1,0 +1,104 @@
+name: Promote Environment Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'Source environment'
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+      to:
+        description: 'Target environment'
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - prod
+      apps:
+        description: 'Comma-separated list of apps to promote (e.g. catalog,cart,orders,web)'
+        required: true
+        default: 'catalog,cart,orders,web'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.from }} -> ${{ inputs.to }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate promotion direction
+        run: |
+          if [ "${{ inputs.from }}" = "${{ inputs.to }}" ]; then
+            echo "Source and target environments must differ." >&2
+            exit 1
+          fi
+          if [ "${{ inputs.from }}" = "dev" ] && [ "${{ inputs.to }}" = "prod" ]; then
+            echo "Direct dev -> prod promotion is forbidden; promote via staging first." >&2
+            exit 1
+          fi
+
+      - name: Mint GitHub App token (so PR triggers required checks)
+        id: app-token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        with:
+          app-id: ${{ secrets.GITOPS_BOT_APP_ID }}
+          private-key: ${{ secrets.GITOPS_BOT_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Update target environment image tags and open PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          FROM_ENV: ${{ inputs.from }}
+          TO_ENV: ${{ inputs.to }}
+          APPS_CSV: ${{ inputs.apps }}
+        run: |
+          BRANCH="promote/${FROM_ENV}-to-${TO_ENV}-${GITHUB_RUN_ID}"
+          git config user.name "kubeshop-gitops-bot[bot]"
+          git config user.email "kubeshop-gitops-bot[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+
+          SUMMARY=""
+          IFS=',' read -ra APP_LIST <<< "${APPS_CSV}"
+          for RAW_APP in "${APP_LIST[@]}"; do
+            APP=$(echo "${RAW_APP}" | xargs)
+            SRC="gitops/apps/envs/${FROM_ENV}/${APP}.yaml"
+            DST="gitops/apps/envs/${TO_ENV}/${APP}.yaml"
+            if [ ! -f "${SRC}" ] || [ ! -f "${DST}" ]; then
+              echo "Skipping ${APP}: missing ${SRC} or ${DST}"
+              continue
+            fi
+            TAG=$(grep -E '^[[:space:]]*tag:[[:space:]]*' "${SRC}" | head -n1 | awk '{print $2}' | tr -d '"' | tr -d "'")
+            if [ -z "${TAG}" ]; then
+              echo "Could not extract image tag from ${SRC}" >&2
+              exit 1
+            fi
+            sed -i -E "s|^([[:space:]]*tag:[[:space:]]*).*|\1${TAG}|" "${DST}"
+            SUMMARY="${SUMMARY}- \`${APP}\`: \`${TAG}\`\n"
+          done
+
+          if git diff --quiet; then
+            echo "Target environment ${TO_ENV} is already up to date with ${FROM_ENV}."
+            exit 0
+          fi
+
+          git add "gitops/apps/envs/${TO_ENV}/"
+          git commit -m "chore(promote): promote ${FROM_ENV} -> ${TO_ENV}"
+          git push origin "${BRANCH}"
+
+          BODY=$(printf "Promotes image tags from \`%s\` to \`%s\`:\n\n%b\n> Note: \`prod\` promotions require CODEOWNERS approval." "${FROM_ENV}" "${TO_ENV}" "${SUMMARY}")
+          gh pr create \
+            --title "chore(promote): promote ${FROM_ENV} -> ${TO_ENV}" \
+            --body "${BODY}" \
+            --base main \
+            --head "${BRANCH}"
