@@ -1,0 +1,206 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kubeshop-slos-and-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: kubeshop
+spec:
+  groups:
+    # -------------------------------------------------------------------------
+    # SLO Recording Rules (5m, 30m, 1h, 6h error ratios for multi-burn alerts)
+    # -------------------------------------------------------------------------
+    - name: kubeshop.slo.recording
+      interval: 30s
+      rules:
+        # Availability SLI: catalog & cart (non-5xx / all, excluding /version)
+        - record: kubeshop:http_error_ratio:rate5m
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version",status=~"5.."}[5m]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version"}[5m])), 1e-9)
+        - record: kubeshop:http_error_ratio:rate30m
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version",status=~"5.."}[30m]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version"}[30m])), 1e-9)
+        - record: kubeshop:http_error_ratio:rate1h
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version",status=~"5.."}[1h]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version"}[1h])), 1e-9)
+        - record: kubeshop:http_error_ratio:rate6h
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version",status=~"5.."}[6h]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service=~"catalog|cart",route!~".*/version"}[6h])), 1e-9)
+
+        # Availability SLI: orders (non-5xx / all POST /api/orders)
+        - record: kubeshop:orders_post_error_ratio:rate5m
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders",status=~"5.."}[5m]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders"}[5m])), 1e-9)
+        - record: kubeshop:orders_post_error_ratio:rate30m
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders",status=~"5.."}[30m]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders"}[30m])), 1e-9)
+        - record: kubeshop:orders_post_error_ratio:rate1h
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders",status=~"5.."}[1h]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders"}[1h])), 1e-9)
+        - record: kubeshop:orders_post_error_ratio:rate6h
+          expr: |
+            sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders",status=~"5.."}[6h]))
+            /
+            clamp_min(sum by (namespace, service) (rate(http_requests_total{service="orders",method="POST",route="/api/orders"}[6h])), 1e-9)
+
+        # Latency SLI: catalog GET /api/catalog/products > 300ms (0.3s)
+        - record: kubeshop:catalog_latency_bad_ratio:rate5m
+          expr: |
+            1 - (
+              sum by (namespace) (rate(http_request_duration_seconds_bucket{service="catalog",method="GET",route="/api/catalog/products",le="0.3"}[5m]))
+              /
+              clamp_min(sum by (namespace) (rate(http_request_duration_seconds_count{service="catalog",method="GET",route="/api/catalog/products"}[5m])), 1e-9)
+            )
+        - record: kubeshop:catalog_latency_bad_ratio:rate1h
+          expr: |
+            1 - (
+              sum by (namespace) (rate(http_request_duration_seconds_bucket{service="catalog",method="GET",route="/api/catalog/products",le="0.3"}[1h]))
+              /
+              clamp_min(sum by (namespace) (rate(http_request_duration_seconds_count{service="catalog",method="GET",route="/api/catalog/products"}[1h])), 1e-9)
+            )
+
+        # Latency SLI: orders POST /api/orders > 800ms (0.8s)
+        - record: kubeshop:orders_latency_bad_ratio:rate5m
+          expr: |
+            1 - (
+              sum by (namespace) (rate(http_request_duration_seconds_bucket{service="orders",method="POST",route="/api/orders",le="0.8"}[5m]))
+              /
+              clamp_min(sum by (namespace) (rate(http_request_duration_seconds_count{service="orders",method="POST",route="/api/orders"}[5m])), 1e-9)
+            )
+        - record: kubeshop:orders_latency_bad_ratio:rate1h
+          expr: |
+            1 - (
+              sum by (namespace) (rate(http_request_duration_seconds_bucket{service="orders",method="POST",route="/api/orders",le="0.8"}[1h]))
+              /
+              clamp_min(sum by (namespace) (rate(http_request_duration_seconds_count{service="orders",method="POST",route="/api/orders"}[1h])), 1e-9)
+            )
+
+    # -------------------------------------------------------------------------
+    # SLO Multi-Window Multi-Burn-Rate Alerts (28-day window)
+    # Availability target 99.5% => error budget = 0.005 (14.4x = 0.072, 6x = 0.03)
+    # Latency target 95%       => error budget = 0.05  (14.4x = 0.72,  6x = 0.30)
+    # -------------------------------------------------------------------------
+    - name: kubeshop.slo.alerts
+      rules:
+        - alert: KubeShopAvailabilityFastBurn
+          expr: |
+            (kubeshop:http_error_ratio:rate1h > (14.4 * 0.005) and kubeshop:http_error_ratio:rate5m > (14.4 * 0.005))
+            or
+            (kubeshop:orders_post_error_ratio:rate1h > (14.4 * 0.005) and kubeshop:orders_post_error_ratio:rate5m > (14.4 * 0.005))
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Fast error budget burn on {{ $labels.service }} ({{ $labels.namespace }})"
+            description: "Service {{ $labels.service }} is burning >14.4x its 28-day 99.5% availability error budget over 1h and 5m windows."
+
+        - alert: KubeShopAvailabilitySlowBurn
+          expr: |
+            (kubeshop:http_error_ratio:rate6h > (6 * 0.005) and kubeshop:http_error_ratio:rate30m > (6 * 0.005))
+            or
+            (kubeshop:orders_post_error_ratio:rate6h > (6 * 0.005) and kubeshop:orders_post_error_ratio:rate30m > (6 * 0.005))
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Slow error budget burn on {{ $labels.service }} ({{ $labels.namespace }})"
+            description: "Service {{ $labels.service }} is burning >6x its 28-day 99.5% availability error budget over 6h and 30m windows."
+
+        - alert: KubeShopCatalogLatencyFastBurn
+          expr: kubeshop:catalog_latency_bad_ratio:rate1h > (14.4 * 0.05) and kubeshop:catalog_latency_bad_ratio:rate5m > (14.4 * 0.05)
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Catalog latency SLO fast burn ({{ $labels.namespace }})"
+            description: "Catalog GET /api/catalog/products is violating its 300ms 95% latency SLO at >14.4x burn rate."
+
+        - alert: KubeShopOrdersLatencyFastBurn
+          expr: kubeshop:orders_latency_bad_ratio:rate1h > (14.4 * 0.05) and kubeshop:orders_latency_bad_ratio:rate5m > (14.4 * 0.05)
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Orders latency SLO fast burn ({{ $labels.namespace }})"
+            description: "Orders POST /api/orders is violating its 800ms 95% latency SLO at >14.4x burn rate."
+
+    # -------------------------------------------------------------------------
+    # Operational Platform & Workload Alerts
+    # -------------------------------------------------------------------------
+    - name: kubeshop.operational.alerts
+      rules:
+        - alert: Watchdog
+          expr: vector(1)
+          labels:
+            severity: none
+          annotations:
+            summary: "Alerting pipeline heartbeat"
+            description: "Dead man's switch alert routed to null receiver."
+
+        - alert: PodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total{namespace=~"kubeshop-.*"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash-looping"
+            description: "Container {{ $labels.container }} restarted >3 times in the last 15 minutes."
+
+        - alert: RolloutAborted
+          expr: rollout_phase{phase="Degraded"} == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Argo Rollout {{ $labels.namespace }}/{{ $labels.name }} aborted/degraded"
+            description: "Rollout {{ $labels.name }} in {{ $labels.namespace }} entered Degraded phase (likely failed canary analysis)."
+
+        - alert: ArgoAppOutOfSync
+          expr: argocd_app_info{sync_status!="Synced"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Argo CD application {{ $labels.name }} OutOfSync > 15m"
+            description: "Application {{ $labels.name }} has been OutOfSync for more than 15 minutes."
+
+        - alert: PVCFillingUp
+          expr: (kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes) < 0.15
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is >85% full"
+            description: "Available volume space dropped below 15%."
+
+        - alert: CertificateExpiringSoon
+          expr: (certmanager_certificate_expiration_timestamp_seconds - time()) < (14 * 86400)
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "TLS Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in <14 days"
+            description: "cert-manager certificate renewal may be failing."
+
+        - alert: NodeNotReady
+          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Kubernetes node {{ $labels.node }} is NotReady"
+            description: "Node {{ $labels.node }} has been in NotReady state for >5 minutes."

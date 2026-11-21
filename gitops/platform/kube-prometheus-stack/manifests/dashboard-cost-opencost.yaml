@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-cost-opencost
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: kubeshop
+data:
+  kubeshop-cost-opencost.json: |
+    {
+      "uid": "kubeshop-cost-opencost",
+      "title": "KubeShop — FinOps & OpenCost",
+      "tags": ["kubeshop", "finops", "opencost"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "1m",
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Estimated Monthly Cluster Compute Cost (USD)",
+          "gridPos": {"x": 0, "y": 0, "w": 8, "h": 6},
+          "fieldConfig": {"defaults": {"unit": "currencyUSD"}},
+          "targets": [
+            {
+              "expr": "sum(node_total_hourly_cost) * 730",
+              "legendFormat": "Monthly Node Cost"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Hourly Compute Cost by Node",
+          "gridPos": {"x": 8, "y": 0, "w": 16, "h": 6},
+          "fieldConfig": {"defaults": {"unit": "currencyUSD"}},
+          "targets": [
+            {
+              "expr": "sum by (node, instance_type) (node_total_hourly_cost)",
+              "legendFormat": "{{node}} ({{instance_type}})"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Hourly CPU Allocation Cost by Namespace",
+          "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8},
+          "fieldConfig": {"defaults": {"unit": "currencyUSD"}},
+          "targets": [
+            {
+              "expr": "sum by (namespace) (kube_pod_container_resource_requests{resource=\"cpu\"} * on(node) group_left() node_cpu_hourly_cost)",
+              "legendFormat": "{{namespace}}"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Hourly RAM Allocation Cost by Namespace",
+          "gridPos": {"x": 12, "y": 6, "w": 12, "h": 8},
+          "fieldConfig": {"defaults": {"unit": "currencyUSD"}},
+          "targets": [
+            {
+              "expr": "sum by (namespace) ((kube_pod_container_resource_requests{resource=\"memory\"} / 1073741824) * on(node) group_left() node_ram_hourly_cost)",
+              "legendFormat": "{{namespace}}"
+            }
+          ]
+        }
+      ]
+    }

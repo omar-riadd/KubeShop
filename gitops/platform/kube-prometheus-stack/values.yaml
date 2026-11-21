@@ -58,6 +58,10 @@ grafana:
 
 alertmanager:
   alertmanagerSpec:
+    alertmanagerConfigSelector:
+      matchLabels:
+        alertmanagerConfig: kubeshop
+    alertmanagerConfigNamespaceSelector: {}
     storage:
       volumeClaimTemplate:
         spec:

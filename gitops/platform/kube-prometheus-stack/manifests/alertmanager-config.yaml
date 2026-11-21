@@ -1,0 +1,44 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: kubeshop-slack-routing
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: kubeshop
+spec:
+  route:
+    groupBy: ["alertname", "namespace", "service"]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    receiver: "null"
+    routes:
+      - matchers:
+          - name: alertname
+            value: Watchdog
+        receiver: "null"
+      - matchers:
+          - name: severity
+            value: critical
+        receiver: slack-alerts
+        repeatInterval: 1h
+      - matchers:
+          - name: severity
+            value: warning
+        receiver: slack-alerts
+        repeatInterval: 4h
+  receivers:
+    - name: "null"
+    - name: slack-alerts
+      slackConfigs:
+        - apiURL:
+            name: alertmanager-slack
+            key: url
+          sendResolved: true
+          title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.namespace | default "cluster" }})'
+          text: >-
+            {{ range .Alerts }}
+            *Severity:* {{ .Labels.severity | default "info" }}
+            *Summary:* {{ .Annotations.summary }}
+            *Description:* {{ .Annotations.description }}
+            {{ end }}

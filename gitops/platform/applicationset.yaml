@@ -148,6 +148,8 @@ spec:
             namespace: external-secrets
           - name: argo-rollouts
             namespace: argo-rollouts
+          - name: kube-prometheus-stack
+            namespace: monitoring
   template:
     metadata:
       name: "platform-{{ .name }}-manifests"

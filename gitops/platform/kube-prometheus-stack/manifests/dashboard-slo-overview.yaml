@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-slo-overview
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: kubeshop
+data:
+  kubeshop-slo-overview.json: |
+    {
+      "uid": "kubeshop-slo-overview",
+      "title": "KubeShop — SLO Overview (28-Day Window)",
+      "tags": ["kubeshop", "slo"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Availability Error Budget Remaining (99.5% Target)",
+          "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+          "fieldConfig": {"defaults": {"unit": "percentunit"}},
+          "targets": [
+            {
+              "expr": "1 - (kubeshop:http_error_ratio:rate6h / 0.005)",
+              "legendFormat": "{{namespace}}/{{service}}"
+            },
+            {
+              "expr": "1 - (kubeshop:orders_post_error_ratio:rate6h / 0.005)",
+              "legendFormat": "{{namespace}}/orders"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Availability Burn Rate (1h Window)",
+          "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+          "targets": [
+            {
+              "expr": "kubeshop:http_error_ratio:rate1h / 0.005",
+              "legendFormat": "{{namespace}}/{{service}} (1h burn)"
+            },
+            {
+              "expr": "kubeshop:orders_post_error_ratio:rate1h / 0.005",
+              "legendFormat": "{{namespace}}/orders (1h burn)"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Latency SLO Bad Ratio (Catalog 300ms / Orders 800ms)",
+          "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8},
+          "fieldConfig": {"defaults": {"unit": "percentunit"}},
+          "targets": [
+            {
+              "expr": "kubeshop:catalog_latency_bad_ratio:rate5m",
+              "legendFormat": "{{namespace}} catalog >300ms"
+            },
+            {
+              "expr": "kubeshop:orders_latency_bad_ratio:rate5m",
+              "legendFormat": "{{namespace}} orders >800ms"
+            }
+          ]
+        }
+      ]
+    }
