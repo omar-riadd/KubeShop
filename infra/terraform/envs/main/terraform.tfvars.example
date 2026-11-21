@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars (gitignored) and replace placeholders before running plan/apply.
+aws_region       = "eu-central-1"
+cluster_name     = "kubeshop"
+cluster_version  = "1.35"
+route53_zone_id  = "Z00000000000000000000"
+github_owner     = "<GH_OWNER>"
+github_repo      = "kubeshop-platform"
+state_bucket_arn = "arn:aws:s3:::kubeshop-tfstate-<AWS_ACCOUNT_ID>"
+
+# Keep private-only when running from a VPN/bastion, or restrict to your operator /32 CIDR:
+endpoint_public_access       = false
+endpoint_public_access_cidrs = [] # e.g. ["203.0.113.10/32"] when endpoint_public_access = true
+
+budget_monthly_limit_usd = "150"
+budget_alert_emails      = ["ops@<BASE_DOMAIN>"]
+
+# Pass sensitive webhook via TF_VAR_slack_webhook_url instead of committing to disk.
