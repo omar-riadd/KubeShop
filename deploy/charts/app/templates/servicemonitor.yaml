@@ -1,0 +1,19 @@
+{{- if and .Values.serviceMonitor.enabled (eq .Values.app.kind "backend") }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kubeshop.name" . }}
+  labels:
+    {{- include "kubeshop.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "kubeshop.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: admin
+      path: /metrics
+      interval: {{ .Values.serviceMonitor.interval }}
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+{{- end }}

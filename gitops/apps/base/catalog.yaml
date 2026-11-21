@@ -1,0 +1,50 @@
+app:
+  name: catalog
+  kind: backend
+
+image:
+  repository: ghcr.io/<GH_OWNER>/kubeshop-catalog
+
+strategy:
+  type: canary
+
+ports:
+  http: 8080
+  admin: 9090
+
+probes:
+  livenessPath: /healthz
+  readinessPath: /readyz
+  portName: admin
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+securityContext:
+  runAsUser: 65532
+  runAsGroup: 65532
+
+env:
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: otel-collector.observability.svc.cluster.local:4317
+
+route:
+  enabled: true
+  pathPrefix: /api/catalog
+
+serviceMonitor:
+  enabled: true
+
+networkPolicy:
+  enabled: true
+  allowIngressFromApps:
+    - cart
+  allowEgressToApps: []
+  allowRedis: false
+  allowPostgres: false
+  allowOtel: true

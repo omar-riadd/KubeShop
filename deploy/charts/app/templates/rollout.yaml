@@ -1,0 +1,189 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "kubeshop.name" . }}
+  labels:
+    {{- include "kubeshop.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      {{- include "kubeshop.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kubeshop.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "kubeshop.name" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.runAsGroup }}
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "kubeshop.selectorLabels" . | nindent 14 }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "kubeshop.selectorLabels" . | nindent 14 }}
+      containers:
+        - name: {{ include "kubeshop.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: {{ .Values.ports.http }}
+              protocol: TCP
+            {{- if eq .Values.app.kind "backend" }}
+            - name: admin
+              containerPort: {{ .Values.ports.admin }}
+              protocol: TCP
+            {{- end }}
+          env:
+            - name: APP_ENV
+              value: {{ .Values.app.environment | quote }}
+            - name: APP_VERSION
+              value: {{ .Values.image.tag | quote }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- range .Values.secretEnv }}
+            - name: {{ .name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secretName }}
+                  key: {{ .key }}
+            {{- end }}
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.livenessPath }}
+              port: {{ .Values.probes.portName }}
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readinessPath }}
+              port: {{ .Values.probes.portName }}
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.timeoutSeconds }}
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.volumes.tmpEmptyDir }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          {{- end }}
+      {{- if .Values.volumes.tmpEmptyDir }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 16Mi
+      {{- end }}
+  strategy:
+    {{- if eq .Values.strategy.type "canary" }}
+    canary:
+      stableService: {{ include "kubeshop.name" . }}
+      canaryService: {{ include "kubeshop.name" . }}-canary
+      trafficRouting:
+        plugins:
+          argoproj-labs/gatewayAPI:
+            httpRoute: {{ include "kubeshop.name" . }}
+            namespace: {{ .Release.Namespace }}
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 1m
+        {{- if .Values.strategy.canary.enableAnalysis }}
+        - analysis:
+            templates:
+              - templateName: success-rate
+                clusterScope: true
+              - templateName: latency-p95
+                clusterScope: true
+            args:
+              - name: service-name
+                value: {{ include "kubeshop.name" . }}
+              - name: namespace
+                value: {{ .Release.Namespace }}
+              - name: canary-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
+        {{- end }}
+        - setWeight: 50
+        - pause:
+            duration: 2m
+        {{- if .Values.strategy.canary.enableAnalysis }}
+        - analysis:
+            templates:
+              - templateName: success-rate
+                clusterScope: true
+              - templateName: latency-p95
+                clusterScope: true
+            args:
+              - name: service-name
+                value: {{ include "kubeshop.name" . }}
+              - name: namespace
+                value: {{ .Release.Namespace }}
+              - name: canary-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
+        {{- end }}
+        - setWeight: 100
+    {{- else if eq .Values.strategy.type "blueGreen" }}
+    blueGreen:
+      activeService: {{ include "kubeshop.name" . }}
+      previewService: {{ include "kubeshop.name" . }}-preview
+      autoPromotionEnabled: {{ .Values.strategy.blueGreen.autoPromotionEnabled }}
+      {{- if .Values.strategy.blueGreen.prePromotionAnalysis }}
+      prePromotionAnalysis:
+        templates:
+          - templateName: web-healthz
+            clusterScope: true
+        args:
+          - name: service-name
+            value: {{ include "kubeshop.name" . }}-preview
+          - name: namespace
+            value: {{ .Release.Namespace }}
+      {{- end }}
+    {{- end }}

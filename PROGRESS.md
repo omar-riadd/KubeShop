@@ -20,7 +20,7 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **U-05** — UI Phase 5: UI CI workflow (`.github/workflows/ci-web.yml`)
 
 ## Milestone M3 — Helm Chart
-- [ ] **B-04** — Backend Phase 4: Shared Helm chart `deploy/charts/app` + `values.schema.json` + base/env values + `kubeconform` validation
+- [x] **B-04** — Backend Phase 4: Shared Helm chart `deploy/charts/app` + `values.schema.json` + base/env values + `kubeconform` validation
 
 ## Milestone M4 — Terraform & GitOps
 - [ ] **B-05** — Backend Phase 5: Terraform (`bootstrap`, `modules/*`, `envs/main`, README) + `fmt`/`validate`/`tflint`/`trivy` (no `apply` without approval)

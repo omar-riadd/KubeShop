@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kubeshop.name" . }}
+  labels:
+    {{- include "kubeshop.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "kubeshop.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    {{- if eq .Values.app.kind "backend" }}
+    - name: admin
+      port: {{ .Values.ports.admin }}
+      targetPort: admin
+      protocol: TCP
+    {{- end }}
+{{- if eq .Values.strategy.type "canary" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kubeshop.name" . }}-canary
+  labels:
+    {{- include "kubeshop.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "kubeshop.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    {{- if eq .Values.app.kind "backend" }}
+    - name: admin
+      port: {{ .Values.ports.admin }}
+      targetPort: admin
+      protocol: TCP
+    {{- end }}
+{{- else if eq .Values.strategy.type "blueGreen" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kubeshop.name" . }}-preview
+  labels:
+    {{- include "kubeshop.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "kubeshop.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+{{- end }}

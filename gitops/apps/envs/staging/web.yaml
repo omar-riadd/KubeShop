@@ -1,0 +1,15 @@
+app:
+  environment: staging
+
+image:
+  tag: sha-0000000
+
+replicaCount: 1
+
+route:
+  hostname: staging.<BASE_DOMAIN>
+
+strategy:
+  blueGreen:
+    autoPromotionEnabled: true
+    prePromotionAnalysis: true

@@ -1,0 +1,50 @@
+app:
+  name: web
+  kind: web
+
+image:
+  repository: ghcr.io/<GH_OWNER>/kubeshop-web
+
+strategy:
+  type: blueGreen
+  blueGreen:
+    autoPromotionEnabled: true
+    prePromotionAnalysis: true
+
+ports:
+  http: 8080
+
+probes:
+  livenessPath: /healthz
+  readinessPath: /healthz
+  portName: http
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+securityContext:
+  runAsUser: 101
+  runAsGroup: 101
+
+volumes:
+  tmpEmptyDir: true
+
+route:
+  enabled: true
+  pathPrefix: /
+
+serviceMonitor:
+  enabled: false
+
+networkPolicy:
+  enabled: true
+  allowIngressFromApps: []
+  allowEgressToApps: []
+  allowRedis: false
+  allowPostgres: false
+  allowOtel: false

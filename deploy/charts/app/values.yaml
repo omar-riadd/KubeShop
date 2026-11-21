@@ -1,0 +1,93 @@
+# Shared defaults for KubeShop applications (catalog, cart, orders, web)
+app:
+  name: catalog
+  kind: backend # backend | web
+  environment: dev # dev | staging | prod
+
+image:
+  repository: ghcr.io/<GH_OWNER>/kubeshop-catalog
+  tag: sha-0000000
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+strategy:
+  type: canary # canary | blueGreen
+  blueGreen:
+    autoPromotionEnabled: true
+    prePromotionAnalysis: false
+  canary:
+    enableAnalysis: true
+
+ports:
+  http: 8080
+  admin: 9090
+
+probes:
+  livenessPath: /healthz
+  readinessPath: /readyz
+  portName: admin # admin for backends, http for web
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 2
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+securityContext:
+  runAsUser: 65532
+  runAsGroup: 65532
+
+volumes:
+  tmpEmptyDir: false
+
+env: []
+secretEnv: []
+
+route:
+  enabled: true
+  gatewayName: kubeshop-gw
+  gatewayNamespace: gateway-system
+  hostname: dev.<BASE_DOMAIN>
+  pathPrefix: /api/catalog
+  rateLimit:
+    enabled: false
+    requestsPerSecond: 30
+
+serviceMonitor:
+  enabled: true
+  interval: 15s
+
+autoscaling:
+  type: none # none | hpa | keda
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  keda:
+    prometheusAddress: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+    query: 'sum(rate(http_requests_total{app="orders"}[1m]))'
+    threshold: "10"
+
+pdb:
+  enabled: false
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  allowIngressFromApps: []
+  allowEgressToApps: []
+  allowRedis: false
+  allowPostgres: false
+  allowOtel: true
+
+migration:
+  enabled: false
+  command: ["/orders", "migrate"]
+
+nodeSelector: {}
+tolerations: []

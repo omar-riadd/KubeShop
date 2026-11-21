@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["app", "image", "strategy", "ports", "probes", "resources"],
+  "properties": {
+    "app": {
+      "type": "object",
+      "required": ["name", "kind", "environment"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": ["catalog", "cart", "orders", "web"]
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["backend", "web"]
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["dev", "staging", "prod"]
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1 },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      }
+    },
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "strategy": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["canary", "blueGreen"] }
+      }
+    },
+    "ports": {
+      "type": "object",
+      "required": ["http"],
+      "properties": {
+        "http": { "type": "integer", "const": 8080 },
+        "admin": { "type": "integer" }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "required": ["livenessPath", "readinessPath", "portName"],
+      "properties": {
+        "livenessPath": { "type": "string" },
+        "readinessPath": { "type": "string" },
+        "portName": { "type": "string", "enum": ["http", "admin"] }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": {
+          "type": "object",
+          "required": ["cpu", "memory"]
+        },
+        "limits": {
+          "type": "object",
+          "required": ["cpu", "memory"]
+        }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["none", "hpa", "keda"] },
+        "minReplicas": { "type": "integer", "minimum": 1 },
+        "maxReplicas": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

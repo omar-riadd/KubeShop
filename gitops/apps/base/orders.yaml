@@ -1,0 +1,61 @@
+app:
+  name: orders
+  kind: backend
+
+image:
+  repository: ghcr.io/<GH_OWNER>/kubeshop-orders
+
+strategy:
+  type: canary
+
+ports:
+  http: 8080
+  admin: 9090
+
+probes:
+  livenessPath: /healthz
+  readinessPath: /readyz
+  portName: admin
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+securityContext:
+  runAsUser: 65532
+  runAsGroup: 65532
+
+env:
+  - name: CART_BASE_URL
+    value: http://cart:80
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: otel-collector.observability.svc.cluster.local:4317
+
+secretEnv:
+  - name: DATABASE_URL
+    secretName: orders-db-app
+    key: uri
+
+route:
+  enabled: true
+  pathPrefix: /api/orders
+
+serviceMonitor:
+  enabled: true
+
+networkPolicy:
+  enabled: true
+  allowIngressFromApps: []
+  allowEgressToApps:
+    - cart
+  allowRedis: false
+  allowPostgres: true
+  allowOtel: true
+
+migration:
+  enabled: true
+  command: ["/orders", "migrate"]

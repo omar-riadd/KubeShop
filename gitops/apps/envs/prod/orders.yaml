@@ -1,0 +1,31 @@
+app:
+  environment: prod
+
+image:
+  tag: sha-0000000
+
+replicaCount: 2
+
+route:
+  hostname: shop.<BASE_DOMAIN>
+  rateLimit:
+    enabled: true
+    requestsPerSecond: 30
+
+autoscaling:
+  type: keda
+  minReplicas: 2
+  maxReplicas: 6
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+nodeSelector:
+  workload: prod
+
+tolerations:
+  - key: workload
+    operator: Equal
+    value: prod
+    effect: NoSchedule
