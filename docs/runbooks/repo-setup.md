@@ -45,7 +45,7 @@ To allow `_publish-image.yml` (dev bumps) and `promote.yml` (staging/prod promot
 ## 3. AWS OIDC & Protected Environment for Terraform
 
 1. After applying `infra/terraform/bootstrap` (or creating the IAM OIDC provider for `token.actions.githubusercontent.com`), set the following **Repository Variables**:
-   - `AWS_REGION`: e.g. `eu-west-1`
+   - `AWS_REGION`: e.g. `eu-central-1`
    - `AWS_TERRAFORM_PLAN_ROLE_ARN`: ARN of the read-only plan role
    - `AWS_TERRAFORM_APPLY_ROLE_ARN`: ARN of the apply role (restricted to `environment:aws-prod-apply`)
 2. Under **Settings → Environments**, create an environment named **`aws-prod-apply`**:
