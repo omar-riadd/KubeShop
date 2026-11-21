@@ -33,4 +33,4 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 
 ## Milestone M6 — Docs & Demo
 - [x] **B-10** — Backend Phase 10: `README.md`, `docs/architecture.md`, ADRs, runbooks, `docs/demo-script.md`, `make cluster-down`
-- [ ] **U-06** — UI Phase 6 & 7: `web/README.md`, `docs/ui/design-notes.md`, local screenshots (live cluster verification deferred until cluster apply)
+- [x] **U-06** — UI Phase 6 & 7: `web/README.md`, `docs/ui/design-notes.md`, local screenshots (9 views captured; live cluster verification deferred until cluster apply)

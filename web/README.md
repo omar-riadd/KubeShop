@@ -37,3 +37,30 @@ pnpm gen:api           # Regenerate TypeScript API types from api/openapi.yaml
 The web application talks to the same origin (`/api/...`) with relative URLs only (no CORS).
 
 In production, container environment variables `APP_ENV`, `APP_VERSION`, `APP_GIT_SHA`, and `APP_BUILD_TIME` are written to `/tmp/runtime-config.json` by `docker-entrypoint.d/40-runtime-config.sh` on container boot and fetched by the frontend on mount.
+
+## Mock Mode (MSW)
+
+For frontend-only development without Docker or Go backends running, enable Mock Service Worker:
+
+```bash
+VITE_USE_MOCKS=true pnpm dev
+```
+
+MSW handlers in `src/mocks/` serve the exact 12 seed products from the Shared Contract. The `mockServiceWorker.js` file is excluded from production `dist/` builds and verified in CI.
+
+## Project Structure
+
+```
+web/
+├── Dockerfile & nginx/           # Unprivileged Nginx (:8080), strict CSP, /tmp emptyDir
+├── docker-entrypoint.d/          # 40-runtime-config.sh entrypoint generator
+├── public/                       # Static product SVGs, favicon, synchronous theme-init.js
+├── src/
+│   ├── api/                      # Fetch client, session ID, OpenAPI generated schema.d.ts, hooks
+│   ├── components/               # Design-system UI primitives, layout, product, cart, status
+│   ├── lib/                      # Currency formatting, UUID, theme helpers
+│   ├── mocks/                    # MSW fixtures and handlers (dev/unit test only)
+│   ├── pages/                    # Catalog, Product, Cart, Checkout, Orders, Order, Status, NotFound
+│   └── styles/                   # Tailwind v4 + CSS variable design tokens
+└── e2e/                          # Playwright E2E + Axe WCAG 2.1 AA accessibility specs
+```

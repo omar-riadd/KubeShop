@@ -231,7 +231,17 @@ For initial repository and cloud onboarding, see the [Repository Setup Runbook](
 
 ---
 
-## 8. License & Ownership
+## 8. Storefront & Platform Status Previews
+
+| Storefront (Light) | Storefront (Dark) | Platform Status & Rollout Monitor |
+|---|---|---|
+| ![Catalog Light](docs/ui/screenshots/catalog-light-desktop.png) | ![Catalog Dark](docs/ui/screenshots/catalog-dark-desktop.png) | ![Status Monitor](docs/ui/screenshots/status-dark-desktop.png) |
+
+See all 9 views (including mobile, product detail, cart, checkout, and order confirmation) in [docs/ui/design-notes.md](docs/ui/design-notes.md#screenshot-gallery-local-stack).
+
+---
+
+## 9. License & Ownership
 
 Maintained by **Omar Riadd** ([@omar-riadd](https://github.com/omar-riadd)).  
 Private Repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)
