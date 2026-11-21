@@ -29,7 +29,7 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 ## Milestone M5 — Observability, Security, Reliability & FinOps
 - [x] **B-07** — Backend Phase 7: Observability (Prometheus, Loki, Alloy, Tempo, OTel, Grafana datasources & 5 dashboards, SLO rules, Alertmanager)
 - [x] **B-08** — Backend Phase 8: Security & Policy (Kyverno policies + `kyverno test` suite, NetworkPolicies, RBAC)
-- [ ] **B-09** — Backend Phase 9: Reliability, rollouts, k6 load tests (`smoke.js`, `load.js`, `stress.js`), `docs/incident-demo.md`, `docs/cost.md`
+- [x] **B-09** — Backend Phase 9: Reliability, rollouts, k6 load tests (`smoke.js`, `load.js`, `stress.js`), `docs/incident-demo.md`, `docs/cost.md`
 
 ## Milestone M6 — Docs & Demo
 - [ ] **B-10** — Backend Phase 10: `README.md`, `docs/architecture.md`, ADRs, runbooks, `docs/demo-script.md`, `make cluster-down`
