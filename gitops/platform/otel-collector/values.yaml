@@ -1,3 +1,6 @@
+nameOverride: otel-collector
+fullnameOverride: otel-collector
+
 mode: deployment
 replicaCount: 1
 

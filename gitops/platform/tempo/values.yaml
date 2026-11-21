@@ -1,3 +1,5 @@
+fullnameOverride: tempo
+
 tempo:
   retention: 168h
   metricsGenerator:
