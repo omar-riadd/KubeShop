@@ -6,9 +6,9 @@ KubeShop follows a strict **GitOps-only** delivery model: no engineer edits Kube
 
 | Environment | Namespace | URL | How image tags update |
 |---|---|---|---|
-| `dev` | `kubeshop-dev` | `https://dev.<BASE_DOMAIN>` | Automatic bot PR opened by `_publish-image.yml` on merge to `main`, auto-merged after CI passes |
-| `staging` | `kubeshop-staging` | `https://staging.<BASE_DOMAIN>` | Manual `workflow_dispatch` of `.github/workflows/promote.yml` (`from: dev`, `to: staging`) → opens PR |
-| `prod` | `kubeshop-prod` | `https://app.<BASE_DOMAIN>` | Manual `workflow_dispatch` of `.github/workflows/promote.yml` (`from: staging`, `to: prod`) → opens PR requiring `CODEOWNERS` review |
+| `dev` | `kubeshop-dev` | `https://dev.<BASE_DOMAIN>` (e.g. `https://dev.lab.internal.`) | Automatic bot PR opened by `_publish-image.yml` on merge to `main`, auto-merged after CI passes |
+| `staging` | `kubeshop-staging` | `https://staging.<BASE_DOMAIN>` (e.g. `https://staging.lab.internal.`) | Manual `workflow_dispatch` of `.github/workflows/promote.yml` (`from: dev`, `to: staging`) → opens PR |
+| `prod` | `kubeshop-prod` | `https://app.<BASE_DOMAIN>` (e.g. `https://app.lab.internal.`) | Manual `workflow_dispatch` of `.github/workflows/promote.yml` (`from: staging`, `to: prod`) → opens PR requiring `CODEOWNERS` review |
 
 ## Promoting `dev` → `staging`
 

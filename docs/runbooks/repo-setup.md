@@ -33,7 +33,7 @@ To allow `_publish-image.yml` (dev bumps) and `promote.yml` (staging/prod promot
      - `Contents`: Read and write
      - `Pull requests`: Read and write
    - **Webhook:** Disabled (not needed)
-2. Install the app on `<GH_OWNER>/kubeshop-platform` only.
+2. Install the app on `<GH_OWNER>/kubeshop-platform` (in our live setup: `omar-riadd/KubeShop`) only.
 3. Generate a private key (`.pem`) and record the **App ID**.
 4. Configure repository secrets and variables under **Settings → Secrets and variables → Actions**:
    - **Secret** `GITOPS_BOT_APP_ID`: the numeric App ID
@@ -63,13 +63,13 @@ Under **Settings → Code security**:
 
 ## 5. GHCR Package Visibility & Cosign Verification
 
-Published images live at `ghcr.io/<GH_OWNER>/kubeshop-{catalog,cart,orders,web}:sha-<7>`.
+Published images live at `ghcr.io/<GH_OWNER>/kubeshop-{catalog,cart,orders,web}:sha-<7>` (in this repository: `ghcr.io/omar-riadd/kubeshop-...`).
 
 To verify a published image signature locally:
 
 ```bash
 cosign verify \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  --certificate-identity-regexp "^https://github\.com/<GH_OWNER>/kubeshop-platform/\.github/workflows/_publish-image\.yml@refs/heads/main$" \
+  --certificate-identity-regexp "^https://github\.com/(<GH_OWNER>|omar-riadd)/(kubeshop-platform|KubeShop)/\.github/workflows/_publish-image\.yml@refs/heads/main$" \
   "ghcr.io/<GH_OWNER>/kubeshop-catalog:sha-<7>"
 ```

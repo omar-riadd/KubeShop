@@ -14,6 +14,7 @@
   3. `dashboard-rollouts-canary.yaml` — Argo Rollouts Canary Comparison
   4. `dashboard-k8s-capacity.yaml` — Kubernetes Capacity & Autoscaling
   5. `dashboard-cost-opencost.yaml` — FinOps & OpenCost
+- Pinned `fullnameOverride` on `loki`, `tempo`, `otel-collector`, and `kube-prometheus-stack` in platform addon values files to guarantee deterministic in-cluster DNS (`loki.observability.svc:3100`, `tempo.observability.svc:4317`) under Argo CD release naming.
 
 ## How to verify
 ```bash

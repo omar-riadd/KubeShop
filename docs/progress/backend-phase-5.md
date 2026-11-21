@@ -21,5 +21,8 @@ tflint --chdir=infra/terraform/envs/main --init && tflint --chdir=infra/terrafor
 trivy config --severity HIGH,CRITICAL --exit-code 1 infra/terraform
 ```
 
-## Known gaps / Deferred
-- `terraform plan` / `terraform apply` against a live AWS account are intentionally deferred until an AWS account, Route 53 hosted zone, and explicit human approval are provided.
+## Live Verification Status
+- Live `terraform plan` was successfully executed and verified against AWS Account `<AWS_ACCOUNT_ID>` (Route 53 hosted zone `<HOSTED_ZONE_ID>` / `lab.internal.`):
+  - `bootstrap`: Plan generated 9 resources to add (S3 state bucket, KMS key & alias, bucket policies, public access blocks).
+  - `envs/main`: Plan generated 111 resources to add, 0 to change, 0 to destroy.
+- `terraform apply` remains safely deferred until explicit user confirmation is requested.
