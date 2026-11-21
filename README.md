@@ -177,6 +177,9 @@ make down
 # Backend unit, integration, and OpenAPI contract tests
 make test
 
+# k6 end-to-end smoke test (against running 'make up' stack)
+make load-test
+
 # Frontend unit tests (Vitest)
 pnpm --dir web test
 
