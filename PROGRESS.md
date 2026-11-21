@@ -27,7 +27,7 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **B-06** — Backend Phase 6: GitOps (`gitops/bootstrap`, `gitops/platform`, `gitops/apps`) & `deploy/charts/env-baseline` + `helm lint`/`kubeconform`/`trivy` clean
 
 ## Milestone M5 — Observability, Security, Reliability & FinOps
-- [ ] **B-07** — Backend Phase 7: Observability (Prometheus, Loki, Alloy, Tempo, OTel, Grafana datasources & 5 dashboards, SLO rules, Alertmanager)
+- [x] **B-07** — Backend Phase 7: Observability (Prometheus, Loki, Alloy, Tempo, OTel, Grafana datasources & 5 dashboards, SLO rules, Alertmanager)
 - [ ] **B-08** — Backend Phase 8: Security & Policy (Kyverno policies + `kyverno test` suite, NetworkPolicies, RBAC)
 - [ ] **B-09** — Backend Phase 9: Reliability, rollouts, k6 load tests (`smoke.js`, `load.js`, `stress.js`), `docs/incident-demo.md`, `docs/cost.md`
 
