@@ -32,5 +32,5 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **B-09** — Backend Phase 9: Reliability, rollouts, k6 load tests (`smoke.js`, `load.js`, `stress.js`), `docs/incident-demo.md`, `docs/cost.md`
 
 ## Milestone M6 — Docs & Demo
-- [ ] **B-10** — Backend Phase 10: `README.md`, `docs/architecture.md`, ADRs, runbooks, `docs/demo-script.md`, `make cluster-down`
+- [x] **B-10** — Backend Phase 10: `README.md`, `docs/architecture.md`, ADRs, runbooks, `docs/demo-script.md`, `make cluster-down`
 - [ ] **U-06** — UI Phase 6 & 7: `web/README.md`, `docs/ui/design-notes.md`, local screenshots (live cluster verification deferred until cluster apply)

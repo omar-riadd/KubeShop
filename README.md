@@ -120,8 +120,14 @@ kubeshop/
 │   ├── charts/env-baseline/             # Namespace baseline (Quotas, Redis, CNPG, k6 traffic)
 │   └── compose/gateway.nginx.conf       # Local Nginx reverse proxy standing in for Envoy Gateway
 ├── docs/
-│   ├── progress/                        # Phase-by-phase completion summaries (Phases 0-8)
-│   ├── runbooks/                        # Repo setup and GitOps promotion runbooks
+│   ├── adr/                             # 8 Architecture Decision Records (ADRs 0001-0008)
+│   ├── progress/                        # Phase-by-phase completion summaries (Phases 0-10)
+│   ├── runbooks/                        # Operational runbooks (repo-setup, bootstrap, promotion, rollback, incident-response, teardown)
+│   ├── ui/                              # UI design system & accessibility notes
+│   ├── architecture.md                  # Deep-dive diagrams (runtime, CI/CD, GitOps, telemetry, security)
+│   ├── cost.md                          # FinOps BoM, OpenCost attribution & budget alerts
+│   ├── demo-script.md                   # 5-minute end-to-end live walkthrough script
+│   ├── incident-demo.md                 # Canary abort, incident drill-down & blameless postmortem template
 │   ├── CONTRACT-CHANGES.md              # Shared contract change protocol log
 │   └── PLACEHOLDERS.md                  # Safe environment placeholder registry
 ├── gitops/
@@ -206,7 +212,26 @@ For initial repository and cloud onboarding, see the [Repository Setup Runbook](
 
 ---
 
-## 6. License & Ownership
+## 6. Documentation & Runbooks
+
+- **Architecture & Decisions**: [System Architecture](docs/architecture.md) · [ADRs (0001–0008)](docs/adr/README.md) · [UI Design Notes](docs/ui/design-notes.md)
+- **Demos & FinOps**: [5-Minute Demo Script](docs/demo-script.md) · [Incident & Canary Demo](docs/incident-demo.md) · [FinOps Cost Analysis](docs/cost.md)
+- **Operational Runbooks**:
+  - [Repository Setup](docs/runbooks/repo-setup.md) · [Cluster Bootstrap](docs/runbooks/bootstrap.md) · [GitOps Promotion](docs/runbooks/promotion.md)
+  - [Rollback](docs/runbooks/rollback.md) · [Incident Response](docs/runbooks/incident-response.md) · [Cluster Teardown](docs/runbooks/teardown.md)
+
+---
+
+## 7. Key Engineering Outcomes
+
+- **Zero-Touch GitOps & Progressive Delivery**: Automated PR-based promotion across `dev`, `staging`, and `prod` using Argo CD `ApplicationSet`s and Argo Rollouts (canary with Prometheus analysis for Go APIs; blue/green for the React 19 SPA).
+- **Hardened Software Supply Chain**: Keyless Sigstore Cosign OIDC image signing, CycloneDX SBOM attestations, SLSA provenance, Trivy/Semgrep/Gitleaks CI gates, and 7 Kyverno v1.20 native CEL admission policies (10/10 CI test suite).
+- **Full-Signal Observability & SLOs**: End-to-end correlation across Prometheus RED metrics, Loki structured JSON logs, and Tempo OpenTelemetry traces with 28-day multi-burn-rate SLO alerts routed to Slack.
+- **FinOps-Driven AWS EKS Design**: Consolidated 3 environments into a single EKS cluster with namespace/NetworkPolicy isolation, Spot non-prod node pools, single NAT Gateway, native S3 state locking, and OpenCost attribution — reducing projected cloud burn by **~59%** (~$265/mo vs ~$646/mo traditional).
+
+---
+
+## 8. License & Ownership
 
 Maintained by **Omar Riadd** ([@omar-riadd](https://github.com/omar-riadd)).  
 Private Repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)
