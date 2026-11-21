@@ -23,8 +23,8 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **B-04** — Backend Phase 4: Shared Helm chart `deploy/charts/app` + `values.schema.json` + base/env values + `kubeconform` validation
 
 ## Milestone M4 — Terraform & GitOps
-- [ ] **B-05** — Backend Phase 5: Terraform (`bootstrap`, `modules/*`, `envs/main`, README) + `fmt`/`validate`/`tflint`/`trivy` (no `apply` without approval)
-- [ ] **B-06** — Backend Phase 6: GitOps (`gitops/bootstrap`, `gitops/platform`, `gitops/apps`) & `deploy/charts/env-baseline`
+- [x] **B-05** — Backend Phase 5: Terraform (`bootstrap`, `modules/*`, `envs/main`, README) + `fmt`/`validate`/`tflint`/`trivy` + live AWS `plan` verified (no `apply` without approval)
+- [x] **B-06** — Backend Phase 6: GitOps (`gitops/bootstrap`, `gitops/platform`, `gitops/apps`) & `deploy/charts/env-baseline` + `helm lint`/`kubeconform`/`trivy` clean
 
 ## Milestone M5 — Observability, Security, Reliability & FinOps
 - [ ] **B-07** — Backend Phase 7: Observability (Prometheus, Loki, Alloy, Tempo, OTel, Grafana datasources & 5 dashboards, SLO rules, Alertmanager)
