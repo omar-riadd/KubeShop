@@ -3,4 +3,6 @@ dev-public
 src/api/schema.d.ts
 pnpm-lock.yaml
 node_modules
+test-results
+playwright-report
 *.tsbuildinfo

@@ -300,12 +300,22 @@ export const StatusPage: React.FC = () => {
                             {count}/{probeResults.total} ({pct}%)
                           </span>
                         </div>
-                        <div className="w-full h-2.5 bg-surface-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary transition-all duration-500 rounded-full"
-                            style={{ width: `${pct}%` }}
+                        <svg
+                          viewBox="0 0 100 10"
+                          preserveAspectRatio="none"
+                          role="img"
+                          aria-label={`${v}: ${pct}%`}
+                          className="w-full h-2.5 bg-surface-muted rounded-full overflow-hidden block"
+                        >
+                          <rect
+                            x="0"
+                            y="0"
+                            width={pct}
+                            height="10"
+                            rx="5"
+                            className="fill-primary transition-all duration-500"
                           />
-                        </div>
+                        </svg>
                       </div>
                     );
                   })}
