@@ -95,9 +95,26 @@ spec:
             chart: opencost
             version: 2.5.34
             wave: "1"
+  strategy:
+    type: RollingSync
+    rollingSync:
+      steps:
+        - matchExpressions:
+            - key: kubeshop.io/sync-wave
+              operator: In
+              values:
+                - "0"
+        - matchExpressions:
+            - key: kubeshop.io/sync-wave
+              operator: In
+              values:
+                - "1"
   template:
     metadata:
       name: "platform-{{ .name }}"
+      labels:
+        kubeshop.io/sync-wave: "{{ .wave }}"
+        kubeshop.io/addon: "{{ .name }}"
       annotations:
         argocd.argoproj.io/sync-wave: "{{ .wave }}"
     spec:
@@ -115,13 +132,13 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: "{{ .namespace }}"
+      # Sync execution is orchestrated wave-by-wave by strategy.rollingSync above
+      # (requires applicationsetcontroller.enable.progressive.syncs=true).
       syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
+          - PruneLast=true
         retry:
           limit: 5
           backoff:

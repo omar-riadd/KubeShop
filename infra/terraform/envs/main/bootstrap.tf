@@ -67,6 +67,8 @@ resource "helm_release" "argocd" {
         params = {
           # UI is never exposed publicly; access via kubectl port-forward.
           "server.insecure" = true
+          # Required for ApplicationSet RollingSync progressive sync waves.
+          "applicationsetcontroller.enable.progressive.syncs" = true
         }
       }
       server = {
