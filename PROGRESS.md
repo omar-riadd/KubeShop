@@ -37,3 +37,8 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 
 ## Post-M6 — Project Improvement Roadmap
 - [x] **IMP-00** — Deep Codebase Audit & Improvement Plan: 18 findings identified across CI/CD, security, performance, reliability, quality, and DX; 14-step prioritized implementation roadmap authored and committed to `improve-plan.md`
+- [x] **IMP-01** — Argo CD Repo Credentials via Terraform: provisioned `kubernetes_secret_v1.argocd_repo_creds` (`kubeshop-repo-creds`, AWS Secrets Manager preferred + `TF_VAR_github_pat` fallback) before `argocd-root-app` reconciles (`940d0f7`)
+- [x] **IMP-02** — Automated Placeholder Substitution: added `scripts/bootstrap-placeholders.sh` (`--dry-run`, `--check`, idempotent apply), `.env.bootstrap.example`, and `make bootstrap` / `make check-placeholders` (`581f11a`)
+- [x] **IMP-03** — Least-Privilege IAM for `terraform-apply`: replaced `PowerUserAccess` + `IAMFullAccess` with scoped inline policy `kubeshop-terraform-apply-least-privilege` in `infra/terraform/modules/github-oidc/` (`e316569`)
+- [x] **IMP-04** — Argo CD Progressive Syncs + `RollingSync`: enabled `applicationsetcontroller.enable.progressive.syncs` in `bootstrap.tf` and added 2-wave `RollingSync` strategy + `kubeshop.io/sync-wave` labels to `platform-helm-addons` (`e3c2793`)
+- [x] **IMP-05** — Route-Level Code Splitting: converted all 8 routes in `web/src/routes.tsx` to `React.lazy`, added `LoadingSpinner` + `Suspense` in `Layout.tsx`, and added Vite vendor `manualChunks` (entry chunk `816 kB → 32.58 kB`, zero chunk warnings) (`c607992`)
