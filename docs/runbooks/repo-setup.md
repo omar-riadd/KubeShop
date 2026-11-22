@@ -51,6 +51,7 @@ To allow `_publish-image.yml` (dev bumps) and `promote.yml` (staging/prod promot
 2. Under **Settings → Environments**, create an environment named **`aws-prod-apply`**:
    - **Required reviewers:** add repository maintainer(s)
    - **Deployment branches:** `main` only
+3. **IAM least-privilege scope:** `kubeshop-terraform-apply` uses an inline least-privilege policy (`kubeshop-terraform-apply-least-privilege` in `infra/terraform/modules/github-oidc/main.tf`) instead of `PowerUserAccess`/`IAMFullAccess`. IAM, EKS, Secrets Manager, CloudWatch Logs, and Budgets permissions are scoped to `kubeshop-*` / `kubeshop/*` resources, and `iam:PassRole` is restricted to `eks.amazonaws.com` and `ec2.amazonaws.com` on `kubeshop-*` roles only. Any new Terraform resources must follow the `${var.cluster_name}-*` naming convention.
 
 ## 4. Security & Dependency Automation
 

@@ -32,6 +32,24 @@ variable "existing_oidc_provider_arn" {
   default     = ""
 }
 
+variable "cluster_name" {
+  description = "EKS cluster / project prefix used to scope least-privilege IAM permissions (e.g. kubeshop)."
+  type        = string
+  default     = "kubeshop"
+}
+
+variable "route53_zone_id" {
+  description = "Route 53 hosted zone ID to scope DNS permissions (optional; empty scopes to account hosted zones)."
+  type        = string
+  default     = ""
+}
+
+variable "secrets_kms_key_arn" {
+  description = "KMS key ARN used for KubeShop Secrets Manager encryption (optional)."
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Additional tags applied to GitHub OIDC IAM resources."
   type        = map(string)

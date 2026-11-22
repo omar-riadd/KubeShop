@@ -50,6 +50,9 @@ module "github_oidc" {
   github_owner               = var.github_owner
   github_repo                = var.github_repo
   state_bucket_arn           = var.state_bucket_arn
+  cluster_name               = var.cluster_name
+  route53_zone_id            = var.route53_zone_id
+  secrets_kms_key_arn        = module.secrets.kms_key_arn
   create_oidc_provider       = var.create_github_oidc_provider
   existing_oidc_provider_arn = var.existing_github_oidc_provider_arn
 }
