@@ -39,6 +39,7 @@ export const checkoutSchema = z.object({
   }),
 });
 
+export type CheckoutFormInput = z.input<typeof checkoutSchema>;
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
 const COUNTRIES = [
@@ -74,7 +75,7 @@ export const CheckoutPage: React.FC = () => {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<CheckoutFormData>({
+  } = useForm<CheckoutFormInput, unknown, CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       customer: {

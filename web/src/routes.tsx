@@ -8,18 +8,14 @@ const CatalogPage = lazy(() =>
 const ProductPage = lazy(() =>
   import('./pages/ProductPage').then((m) => ({ default: m.ProductPage }))
 );
-const CartPage = lazy(() =>
-  import('./pages/CartPage').then((m) => ({ default: m.CartPage }))
-);
+const CartPage = lazy(() => import('./pages/CartPage').then((m) => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() =>
   import('./pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage }))
 );
 const OrdersPage = lazy(() =>
   import('./pages/OrdersPage').then((m) => ({ default: m.OrdersPage }))
 );
-const OrderPage = lazy(() =>
-  import('./pages/OrderPage').then((m) => ({ default: m.OrderPage }))
-);
+const OrderPage = lazy(() => import('./pages/OrderPage').then((m) => ({ default: m.OrderPage })));
 const StatusPage = lazy(() =>
   import('./pages/StatusPage').then((m) => ({ default: m.StatusPage }))
 );
