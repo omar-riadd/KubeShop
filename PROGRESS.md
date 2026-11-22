@@ -34,3 +34,6 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 ## Milestone M6 — Docs & Demo
 - [x] **B-10** — Backend Phase 10: `README.md`, `docs/architecture.md`, ADRs, runbooks, `docs/demo-script.md`, `make cluster-down`
 - [x] **U-06** — UI Phase 6 & 7: `web/README.md`, `docs/ui/design-notes.md`, local screenshots (9 views captured; live cluster verification deferred until cluster apply)
+
+## Post-M6 — Project Improvement Roadmap
+- [x] **IMP-00** — Deep Codebase Audit & Improvement Plan: 18 findings identified across CI/CD, security, performance, reliability, quality, and DX; 14-step prioritized implementation roadmap authored and committed to `improve-plan.md`

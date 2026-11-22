@@ -637,7 +637,7 @@ Steps are ordered by dependency and impact. Each step is independently mergeable
 3. Add cleanup goroutine to evict stale limiters (use `sync.Map` range + timestamp tracking to avoid unbounded memory growth).
 
 **Design notes:** `sync.Map` with per-key limiters is a standard Go pattern for in-process rate limiting. It does not persist across pod restarts or coordinate across replicas — for multi-replica coordination, Redis is needed. For now, per-pod limiting is acceptable (per-pod allows `rps` per replica; with 2 replicas, effective rate is `2 × rps`). Document this.  
-**Libraries / tools:** `golang.org/x/time/rate` — verify if in `go.sum` already.  
+**Libraries / tools:** `golang.org/x/time/rate` — verified not currently in `services/go.sum`; will be added via `go get golang.org/x/time/rate` when implementing this step.  
 **Edge cases:** IP-based limiting behind a proxy — use `X-Forwarded-For` only if trusted (behind the ingress). Session cookie-based limiting is preferred.  
 **Tests / Verification:**
 - Unit test: send 6 requests in <1 s to the middleware → first 5 (burst) pass, 6th returns 429.
@@ -748,3 +748,4 @@ Week 4 (DX & Polish)
 - **No breaking API changes** in any step — all changes are additive or internal refactors.
 - **Deferred: Kargo** — the manual promotion workflow is a known gap. Add Kargo only once the team has at least 2 developers and a dedicated platform engineer.
 - All file paths and line numbers verified against `HEAD 745d930`.
+- **Step 13 dependency verification** — Verified with `grep 'golang.org/x/time' services/go.sum` that `golang.org/x/time` is not present; will be added via `go get` when Step 13 is executed.

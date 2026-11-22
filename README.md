@@ -218,6 +218,7 @@ For initial repository and cloud onboarding, see the [Repository Setup Runbook](
 ## 6. Documentation & Runbooks
 
 - **Architecture & Decisions**: [System Architecture](docs/architecture.md) · [ADRs (0001–0008)](docs/adr/README.md) · [UI Design Notes](docs/ui/design-notes.md)
+- **Improvement Roadmap**: [14-Step Improvement Plan](improve-plan.md) (18 audit findings across pipeline, security, perf, reliability, quality, and DX)
 - **Demos & FinOps**: [5-Minute Demo Script](docs/demo-script.md) · [Incident & Canary Demo](docs/incident-demo.md) · [FinOps Cost Analysis](docs/cost.md)
 - **Operational Runbooks**:
   - [Repository Setup](docs/runbooks/repo-setup.md) · [Cluster Bootstrap](docs/runbooks/bootstrap.md) · [GitOps Promotion](docs/runbooks/promotion.md)
