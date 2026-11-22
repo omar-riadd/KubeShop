@@ -30,4 +30,25 @@ export default defineConfig({
   },
   // Ensure dev-public is only served in dev mode
   publicDir: 'public',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('react-router')) {
+            return 'vendor-router';
+          }
+          if (id.includes('react-dom') || id.includes('/react/')) {
+            return 'vendor-react';
+          }
+          if (id.includes('@tanstack/react-query')) {
+            return 'vendor-query';
+          }
+          if (id.includes('lucide-react')) {
+            return 'vendor-icons';
+          }
+        },
+      },
+    },
+  },
 });

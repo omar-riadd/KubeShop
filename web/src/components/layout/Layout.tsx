@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { WifiOff } from 'lucide-react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ToastProvider } from '../ui/Toast';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export const Layout: React.FC = () => {
   const [isOnline, setIsOnline] = useState(
@@ -82,7 +83,9 @@ export const Layout: React.FC = () => {
         <Header />
 
         <main id="main-content" className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
-          <Outlet />
+          <Suspense fallback={<LoadingSpinner />}>
+            <Outlet />
+          </Suspense>
         </main>
 
         <Footer />
