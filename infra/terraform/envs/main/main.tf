@@ -21,6 +21,8 @@ module "eks" {
   subnet_ids                   = module.network.private_subnet_ids
   endpoint_public_access       = var.endpoint_public_access
   endpoint_public_access_cidrs = var.endpoint_public_access_cidrs
+  spot_instance_types          = var.spot_instance_types
+  ondemand_instance_types      = var.ondemand_instance_types
 }
 
 module "iam_irsa" {

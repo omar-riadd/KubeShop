@@ -23,7 +23,7 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **B-04** — Backend Phase 4: Shared Helm chart `deploy/charts/app` + `values.schema.json` + base/env values + `kubeconform` validation
 
 ## Milestone M4 — Terraform & GitOps
-- [x] **B-05** — Backend Phase 5: Terraform (`bootstrap`, `modules/*`, `envs/main`, README) + `fmt`/`validate`/`tflint`/`trivy` + live AWS `plan` verified (no `apply` without approval)
+- [x] **B-05** — Backend Phase 5: Terraform (`bootstrap`, `modules/*`, `envs/main`, README) + `fmt`/`validate`/`tflint`/`trivy` + live AWS `apply`, EKS 1.35.9 cluster/Helm verification, and clean `destroy` verified end-to-end
 - [x] **B-06** — Backend Phase 6: GitOps (`gitops/bootstrap`, `gitops/platform`, `gitops/apps`) & `deploy/charts/env-baseline` + `helm lint`/`kubeconform`/`trivy` clean
 
 ## Milestone M5 — Observability, Security, Reliability & FinOps

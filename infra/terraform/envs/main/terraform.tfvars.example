@@ -14,4 +14,8 @@ endpoint_public_access_cidrs = [] # e.g. ["203.0.113.10/32"] when endpoint_publi
 budget_monthly_limit_usd = "150"
 budget_alert_emails      = ["ops@<BASE_DOMAIN>"]
 
+# Optional: override managed node group instance types (e.g. for AWS Free Tier accounts):
+# spot_instance_types     = ["m7i-flex.large", "c7i-flex.large"]
+# ondemand_instance_types = ["m7i-flex.large"]
+
 # Pass sensitive webhook via TF_VAR_slack_webhook_url instead of committing to disk.

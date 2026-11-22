@@ -34,6 +34,18 @@ variable "endpoint_public_access_cidrs" {
   default     = []
 }
 
+variable "spot_instance_types" {
+  description = "EC2 instance types for the general-purpose Spot node group."
+  type        = list(string)
+  default     = ["t3.xlarge", "t3a.xlarge", "m6i.xlarge", "m5.xlarge"]
+}
+
+variable "ondemand_instance_types" {
+  description = "EC2 instance types for the prod On-Demand node group."
+  type        = list(string)
+  default     = ["t3.large"]
+}
+
 variable "route53_zone_id" {
   description = "Route 53 hosted zone ID for <BASE_DOMAIN>."
   type        = string

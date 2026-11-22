@@ -58,7 +58,7 @@ module "eks" {
     spot = {
       name           = "spot"
       capacity_type  = "SPOT"
-      instance_types = ["t3.xlarge", "t3a.xlarge", "m6i.xlarge", "m5.xlarge"]
+      instance_types = var.spot_instance_types
 
       min_size     = 2
       max_size     = 4
@@ -91,7 +91,7 @@ module "eks" {
     ondemand = {
       name           = "ondemand"
       capacity_type  = "ON_DEMAND"
-      instance_types = ["t3.large"]
+      instance_types = var.ondemand_instance_types
 
       min_size     = 1
       max_size     = 2
