@@ -42,16 +42,29 @@ This removes EKS worker nodes, the EKS control plane, IRSA roles, GitHub OIDC ro
 ---
 
 ## Step 4: Verify Clean AWS Account (Zero Ongoing Cost)
-Run quick AWS CLI checks in `eu-central-1` to confirm zero orphaned billable resources:
+Run quick AWS CLI checks in `eu-central-1` (and all other active regions) to confirm zero orphaned billable resources:
 
 ```bash
+# Core networking and compute checks in cluster region
 aws elbv2 describe-load-balancers --region eu-central-1 --query 'LoadBalancers[*].LoadBalancerName'
 aws ec2 describe-nat-gateways --region eu-central-1 --filter Name=state,Values=available --query 'NatGateways[*].NatGatewayId'
 aws ec2 describe-volumes --region eu-central-1 --filters Name=status,Values=available --query 'Volumes[*].VolumeId'
 aws ec2 describe-network-interfaces --region eu-central-1 --filters Name=description,Values="*kubeshop*" --query 'NetworkInterfaces[*].NetworkInterfaceId'
+aws eks list-clusters --region eu-central-1
+aws route53 list-hosted-zones
+
+# Multi-region loop check across all 17 regions:
+for r in $(aws ec2 describe-regions --query 'Regions[].RegionName' --output text); do
+  clusters=$(aws eks list-clusters --region "$r" --query 'clusters' --output text)
+  vms=$(aws ec2 describe-instances --region "$r" --query "Reservations[].Instances[?State.Name!='terminated'].InstanceId" --output text)
+  lbs=$(aws elbv2 describe-load-balancers --region "$r" --query 'LoadBalancers[].LoadBalancerName' --output text)
+  [ -n "$clusters" ] && echo "[$r] Active EKS: $clusters"
+  [ -n "$vms" ] && echo "[$r] Active EC2: $vms"
+  [ -n "$lbs" ] && echo "[$r] Active ELB: $lbs"
+done
 ```
 
-All four commands should return empty lists (`[]`).
+All commands should return empty lists (`[]`) or zero output, confirming zero billable resources.
 
 ---
 
