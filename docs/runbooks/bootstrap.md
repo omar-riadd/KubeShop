@@ -15,6 +15,18 @@ This runbook documents the deterministic, reproducible steps to provision the Ku
 
 ---
 
+## Step 0: Substitute Repository Placeholders
+Copy `.env.bootstrap.example` to `.env.bootstrap` (git-ignored), fill in your GitHub owner, base domain, AWS account ID, region, cluster name, and Route 53 hosted zone ID, then run:
+
+```bash
+cp .env.bootstrap.example .env.bootstrap
+# edit .env.bootstrap with your values
+make bootstrap
+make check-placeholders
+```
+
+---
+
 ## Step 1: Bootstrap Terraform Remote State (One-Time)
 Provisions the KMS-encrypted, versioned S3 state bucket using Terraform native S3 lockfiles (`use_lockfile = true`, no DynamoDB table required):
 

@@ -2,6 +2,12 @@
 
 Never commit real identifiers, domains, account IDs, or webhook URLs to Git. Replace these placeholders locally or via Terraform variables / GitHub Actions secrets when deploying to a real AWS account.
 
+## Automated Substitution
+1. Copy `.env.bootstrap.example` to `.env.bootstrap` (git-ignored) and fill in your values.
+2. Preview changes: `scripts/bootstrap-placeholders.sh --dry-run`
+3. Apply substitutions: `make bootstrap`
+4. Verify no deployment placeholders remain: `make check-placeholders`
+
 | Placeholder | Meaning | Concrete Value in Live Setup | Where Used |
 |---|---|---|---|
 | `<GH_OWNER>` | GitHub organization or username owning the repository | `omar-riadd` | `CODEOWNERS`, `services/go.mod`, `gitops/apps/base/*.yaml`, `gitops/platform/kyverno/manifests/*.yaml`, `gitops/bootstrap/`, `gitops/apps/applicationset.yaml`, `gitops/platform/applicationset.yaml`, `.github/workflows/*.yml`, `infra/terraform/`, `docs/incident-demo.md` |

@@ -1,4 +1,4 @@
-.PHONY: dev-backend up down logs test lint openapi-lint load-test tf-plan cluster-down
+.PHONY: dev-backend up down logs test lint openapi-lint load-test tf-plan cluster-down bootstrap check-placeholders
 
 COMPOSE := docker compose
 
@@ -48,3 +48,10 @@ cluster-down:
 		echo "Waiting for LoadBalancers: $$lbs"; sleep 10; \
 	done
 	@echo "Step 3: Run 'cd infra/terraform/envs/main && terraform destroy' after verifying no orphaned ELBs remain."
+
+bootstrap:
+	@echo "Substituting repository placeholders..."
+	@bash scripts/bootstrap-placeholders.sh
+
+check-placeholders:
+	@bash scripts/bootstrap-placeholders.sh --check
