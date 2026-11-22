@@ -80,6 +80,41 @@ resource "helm_release" "argocd" {
   depends_on = [module.eks, aws_eks_addon.ebs_csi]
 }
 
+data "aws_secretsmanager_secret_version" "github_pat" {
+  count     = var.argocd_repo_creds_secret_name != "" ? 1 : 0
+  secret_id = var.argocd_repo_creds_secret_name
+}
+
+locals {
+  argocd_github_pat = (
+    var.argocd_repo_creds_secret_name != ""
+    ? data.aws_secretsmanager_secret_version.github_pat[0].secret_string
+    : var.github_pat
+  )
+  create_argocd_repo_creds = var.argocd_repo_creds_secret_name != "" || var.github_pat != ""
+}
+
+resource "kubernetes_secret_v1" "argocd_repo_creds" {
+  count = local.create_argocd_repo_creds ? 1 : 0
+
+  metadata {
+    name      = "kubeshop-repo-creds"
+    namespace = "argocd"
+    labels = {
+      "argocd.argoproj.io/secret-type" = "repository"
+    }
+  }
+
+  data = {
+    type     = "git"
+    url      = "https://github.com/${var.github_owner}/${var.github_repo}.git"
+    username = "git"
+    password = local.argocd_github_pat
+  }
+
+  depends_on = [helm_release.argocd]
+}
+
 resource "helm_release" "argocd_root_app" {
   name       = "argocd-root-app"
   repository = "https://argoproj.github.io/argo-helm"
@@ -121,5 +156,9 @@ resource "helm_release" "argocd_root_app" {
     })
   ]
 
-  depends_on = [helm_release.argocd, helm_release.aws_load_balancer_controller]
+  depends_on = [
+    helm_release.argocd,
+    helm_release.aws_load_balancer_controller,
+    kubernetes_secret_v1.argocd_repo_creds,
+  ]
 }

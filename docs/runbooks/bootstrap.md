@@ -34,10 +34,18 @@ Record the output `state_bucket_arn` for Step 2.
    cp infra/terraform/envs/main/terraform.tfvars.example infra/terraform/envs/main/terraform.tfvars
    ```
    Set `route53_zone_id`, `github_owner`, `state_bucket_arn`, and `budget_email`.
-2. Export the Slack webhook as a sensitive environment variable (never commit):
-   ```bash
-   export TF_VAR_slack_webhook_url="<SLACK_WEBHOOK_URL>"
-   ```
+2. Configure sensitive credentials (never commit to git):
+   - **Slack webhook**:
+     ```bash
+     export TF_VAR_slack_webhook_url="<SLACK_WEBHOOK_URL>"
+     ```
+   - **Private GitHub repository credentials for Argo CD** (fine-grained PAT with `Contents: Read-only` on the GitOps repo):
+     - *Preferred (AWS Secrets Manager)*: create secret `kubeshop/github-pat` containing the PAT string, then set `argocd_repo_creds_secret_name = "kubeshop/github-pat"` in `terraform.tfvars`.
+     - *Alternative (env var)*:
+       ```bash
+       export TF_VAR_github_pat="<GITHUB_FINE_GRAINED_PAT>"
+       ```
+     Terraform automatically provisions `kubernetes_secret_v1.argocd_repo_creds` (`kubeshop-repo-creds` in namespace `argocd` with label `argocd.argoproj.io/secret-type=repository`) before `argocd-root-app` reconciles.
 3. Initialize, review plan, and apply:
    ```bash
    terraform -chdir=infra/terraform/envs/main init \

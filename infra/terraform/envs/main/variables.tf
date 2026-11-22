@@ -68,6 +68,19 @@ variable "gitops_target_revision" {
   default     = "main"
 }
 
+variable "argocd_repo_creds_secret_name" {
+  description = "AWS Secrets Manager secret name/ARN storing the read-only GitHub PAT for Argo CD (e.g. kubeshop/github-pat). Preferred over github_pat."
+  type        = string
+  default     = ""
+}
+
+variable "github_pat" {
+  description = "Fine-grained read-only GitHub PAT (contents: read) for private GitOps repo access when argocd_repo_creds_secret_name is not set. Pass via TF_VAR_github_pat; never commit."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "state_bucket_arn" {
   description = "ARN of the bootstrap S3 Terraform state bucket (e.g. arn:aws:s3:::kubeshop-tfstate-<AWS_ACCOUNT_ID>)."
   type        = string

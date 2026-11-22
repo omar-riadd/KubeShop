@@ -18,4 +18,8 @@ budget_alert_emails      = ["ops@<BASE_DOMAIN>"]
 # spot_instance_types     = ["m7i-flex.large", "c7i-flex.large"]
 # ondemand_instance_types = ["m7i-flex.large"]
 
+# Private GitOps repo credentials for Argo CD (HTTPS + fine-grained PAT with contents:read):
+# Preferred: store PAT in AWS Secrets Manager and reference the secret name here:
+# argocd_repo_creds_secret_name = "kubeshop/github-pat"
+# Fallback: pass via TF_VAR_github_pat instead of committing to disk.
 # Pass sensitive webhook via TF_VAR_slack_webhook_url instead of committing to disk.
