@@ -225,14 +225,56 @@ func (s *Store) List(ctx context.Context, sessionID string) ([]Order, error) {
 		return nil, fmt.Errorf("iterate orders: %w", err)
 	}
 
-	for i := range orders {
-		items, err := s.loadOrderItems(ctx, orders[i].ID)
+	// Batch-load items for all orders in a single query (fixes N+1).
+	if len(orders) > 0 {
+		ids := make([]string, len(orders))
+		for i, o := range orders {
+			ids[i] = o.ID
+		}
+		itemsByOrder, err := s.loadOrderItemsBatch(ctx, ids)
 		if err != nil {
 			return nil, err
 		}
-		orders[i].Items = items
+		for i := range orders {
+			orders[i].Items = itemsByOrder[orders[i].ID]
+			if orders[i].Items == nil {
+				orders[i].Items = []OrderItem{}
+			}
+		}
 	}
 	return orders, nil
+}
+
+// loadOrderItemsBatch fetches order items for multiple orders in one query.
+// Returns a map keyed by order ID; orders with no items are absent from the map.
+func (s *Store) loadOrderItemsBatch(ctx context.Context, orderIDs []string) (map[string][]OrderItem, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT order_id, product_id, name, price_cents, quantity
+		FROM order_items
+		WHERE order_id = ANY($1)
+		ORDER BY order_id, product_id ASC
+	`, orderIDs)
+	if err != nil {
+		return nil, fmt.Errorf("batch load order items: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string][]OrderItem, len(orderIDs))
+	for rows.Next() {
+		var (
+			orderID string
+			it      OrderItem
+		)
+		if err := rows.Scan(&orderID, &it.ProductID, &it.Name, &it.PriceCents, &it.Quantity); err != nil {
+			return nil, fmt.Errorf("scan batch order item: %w", err)
+		}
+		it.LineTotalCents = it.PriceCents * it.Quantity
+		result[orderID] = append(result[orderID], it)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate batch order items: %w", err)
+	}
+	return result, nil
 }
 
 func (s *Store) loadOrderItems(ctx context.Context, orderID string) ([]OrderItem, error) {
