@@ -66,11 +66,11 @@ flowchart TD
 ### Microservices (`services/`)
 - **`catalog`**: High-performance Go service loading 12 engineering gear products into memory at startup. Stateless, filtered search, pagination, category listing.
 - **`cart`**: Go service managing anonymous customer sessions via `X-Session-ID` in Redis hashes (24h TTL). Performs snapshotting from `catalog`.
-- **`orders`**: Go service executing order placement within an ACID transaction on CloudNativePG (PostgreSQL 17), with idempotency key replay, empty cart validation, and automatic cart clearing.
+- **`orders`**: Go service executing order placement within an ACID transaction on CloudNativePG (PostgreSQL 17), with idempotency key replay, batch order-item loading (`WHERE order_id = ANY($1)`), empty cart validation, and automatic cart clearing.
 - **`internal/platform`**: Shared package providing structured JSON logging (`slog`), OpenTelemetry tracing & propagation, Prometheus RED metrics, graceful shutdown with gateway drain delay, request body limits (16 KiB), and fault injection (`FAULT_ERROR_RATE`, `FAULT_LATENCY_MS`).
 
 ### Frontend SPA (`web/`)
-- **React 19 + TypeScript + Vite**: Responsive desk gear storefront with Tailwind CSS v4 design tokens, TanStack Query v5, accessible components (WCAG 2.1 AA), and zero-FOUC theme switching (light/dark/system).
+- **React 19 + TypeScript + Vite**: Responsive desk gear storefront with Tailwind CSS v4 design tokens, TanStack Query v5, route-level `React.lazy` + `Suspense` code splitting (32.58 kB entry chunk), accessible components (WCAG 2.1 AA), and zero-FOUC theme switching (light/dark/system).
 - **Platform Status Dashboard (`/status`)**: Live canary rollout observer measuring service health, response latency, active pod names, and real-time version traffic distributions.
 - **Hardened Nginx**: Runs as unprivileged user `101`, `readOnlyRootFilesystem: true`, dynamic runtime configuration via `/tmp/runtime-config.json`, and strict Content Security Policy (`script-src 'self'`).
 
@@ -221,7 +221,7 @@ For initial repository and cloud onboarding, see the [Repository Setup Runbook](
 ## 6. Documentation & Runbooks
 
 - **Architecture & Decisions**: [System Architecture](docs/architecture.md) · [ADRs (0001–0008)](docs/adr/README.md) · [UI Design Notes](docs/ui/design-notes.md)
-- **Improvement Roadmap**: [14-Step Improvement Plan](improve-plan.md) (5/14 steps complete; 18 audit findings across pipeline, security, perf, reliability, quality, and DX)
+- **Improvement Roadmap**: [14-Step Improvement Plan](improve-plan.md) (7/14 steps complete; 18 audit findings across pipeline, security, perf, reliability, quality, and DX)
 - **Demos & FinOps**: [5-Minute Demo Script](docs/demo-script.md) · [Incident & Canary Demo](docs/incident-demo.md) · [FinOps Cost Analysis](docs/cost.md)
 - **Operational Runbooks**:
   - [Repository Setup](docs/runbooks/repo-setup.md) · [Cluster Bootstrap](docs/runbooks/bootstrap.md) · [GitOps Promotion](docs/runbooks/promotion.md)

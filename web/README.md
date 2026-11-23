@@ -13,8 +13,8 @@ React 19 storefront Single Page Application (SPA) for KubeShop ("Gear for engine
 ## Tech Stack
 
 - **Framework**: React 19 + TypeScript (strict) + Vite
-- **Routing**: React Router (library mode, `BrowserRouter`)
-- **Server State**: TanStack Query v5
+- **Routing**: React Router v7 (`BrowserRouter`) with route-level `React.lazy` + `Suspense` code splitting and vendor manual chunks (`32.58 kB` entry chunk)
+- **Server State & Forms**: TanStack Query v5, React Hook Form + Zod v4
 - **Styling**: Tailwind CSS v4 + Design tokens (`tokens.css`) + `lucide-react` icons
 - **Fonts**: Self-hosted `@fontsource-variable/inter` and `@fontsource-variable/jetbrains-mono`
 - **Testing**: Vitest + Testing Library, Playwright + `@axe-core/playwright`

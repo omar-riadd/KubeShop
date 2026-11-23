@@ -44,6 +44,6 @@ Combined build order following Shared Contract Milestones (M0 → M6) across `pl
 - [x] **IMP-05** — Route-Level Code Splitting: converted all 8 routes in `web/src/routes.tsx` to `React.lazy`, added `LoadingSpinner` + `Suspense` in `Layout.tsx`, and added Vite vendor `manualChunks` (entry chunk `816 kB → 32.58 kB`, zero chunk warnings) (`c607992`)
 - [x] **CI-FIX** — CI & Security Workflow Stabilization: formatted `routes.tsx`, upgraded `zod` to `4.6.7` + `@hookform/resolvers` to `7.0.8` (fixing `GHSA-mrhx-c7xc-m3w5`), updated `gitleaks-action` (`v3.0.0`), `trivy-action` (`v0.36.0`), `golangci-lint` (`v2.15.0`), `cosign-installer` (`v4.1.3`), and fixed `semgrep scan` (`3633f6b`, `1acde80`, `b32f794`, `e1ce969`)
 - [x] **IMP-06** — Fix N+1 Orders Query: replaced per-order `loadOrderItems` loop in `List()` with `loadOrderItemsBatch` using `WHERE order_id = ANY($1)`; added `store_test.go` with `TestListBatchLoad` (3 orders, batch verified) and `TestListEmpty` (empty-slice guard); reduces `GET /api/orders` from 51 to 2 DB round-trips at page-size 50 (`d208087`)
-- [x] **IMP-07** — Raise Go Test Coverage to ≥80%: added targeted tests across `internal/platform` (`80.8%`), `cart/internal` (`92.7%`), and `orders/internal` (`88.7%`) plus `≥80%` CI coverage gate in `.github/workflows/ci-services.yml`
+- [x] **IMP-07** — Raise Go Test Coverage to ≥80%: added targeted tests across `internal/platform` (`80.8%`), `cart/internal` (`92.7%`), and `orders/internal` (`88.7%`) plus `≥80%` CI coverage gate in `.github/workflows/ci-services.yml` (`91861ce`)
 
 
