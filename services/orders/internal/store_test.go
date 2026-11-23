@@ -97,6 +97,13 @@ func TestListEmpty(t *testing.T) {
 	store := internal.NewStore(pool)
 	ctx := context.Background()
 
+	if err := store.Ping(ctx); err != nil {
+		t.Fatalf("Ping: %v", err)
+	}
+	if _, found, err := store.FindByIdempotencyKey(ctx, uuid.NewString(), ""); err != nil || found {
+		t.Fatalf("expected empty idempotency key to return found=false, got found=%v err=%v", found, err)
+	}
+
 	orders, err := store.List(ctx, uuid.NewString())
 	if err != nil {
 		t.Fatalf("List empty: %v", err)

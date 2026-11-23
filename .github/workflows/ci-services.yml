@@ -54,9 +54,15 @@ jobs:
           working-directory: services
           args: ./${{ matrix.package }}/...
 
-      - name: Run unit, integration & OpenAPI contract tests
+      - name: Run unit, integration & OpenAPI contract tests (≥80% coverage gate)
         working-directory: services
-        run: go test -v -race -coverprofile=coverage-${{ matrix.package == 'internal/platform' && 'platform' || matrix.package }}.out ./${{ matrix.package }}/...
+        run: |
+          TARGET="./${{ matrix.package == 'internal/platform' && 'internal/platform' || format('{0}/internal', matrix.package) }}"
+          OUT="coverage-${{ matrix.package == 'internal/platform' && 'platform' || matrix.package }}.out"
+          go test -v -race -coverprofile="$OUT" "$TARGET"
+          TOTAL=$(go tool cover -func="$OUT" | awk '/^total:/ {gsub(/%/, "", $3); print $3}')
+          echo "Package $TARGET coverage: ${TOTAL}%"
+          awk -v cov="$TOTAL" 'BEGIN { if (cov + 0 < 80.0) { printf "ERROR: coverage %.1f%% is below 80.0%% threshold\n", cov; exit 1 } }'
 
   publish:
     name: Publish (${{ matrix.service }})
