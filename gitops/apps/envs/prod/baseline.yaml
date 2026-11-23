@@ -16,6 +16,15 @@ quota:
   limitsMemory: "16Gi"
   pods: "60"
 
+redis:
+  persistence:
+    enabled: true
+    storageClass: gp3
+    size: 2Gi
+  pdb:
+    enabled: true
+    minAvailable: 1
+
 postgres:
   instances: 2
   storage:

@@ -39,6 +39,13 @@ redis:
     limits:
       cpu: 200m
       memory: 128Mi
+  persistence:
+    enabled: false
+    storageClass: gp3
+    size: 1Gi
+  pdb:
+    enabled: false
+    minAvailable: 1
 
 postgres:
   enabled: true

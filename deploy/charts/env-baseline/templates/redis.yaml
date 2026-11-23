@@ -8,14 +8,17 @@ metadata:
     {{- include "baseline.commonLabels" . | nindent 4 }}
 automountServiceAccountToken: false
 ---
+# NOTE: Upgrading from an existing Deployment to StatefulSet is not in-place;
+# Helm will recreate Redis, briefly dropping in-memory carts during migration.
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: redis
   labels:
     app.kubernetes.io/name: redis
     {{- include "baseline.commonLabels" . | nindent 4 }}
 spec:
+  serviceName: redis
   replicas: 1
   selector:
     matchLabels:
@@ -49,10 +52,22 @@ spec:
           imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
           command:
             - redis-server
+            {{- if .Values.redis.persistence.enabled }}
+            - --dir
+            - /data
+            - --save
+            - "60"
+            - "1"
+            - --appendonly
+            - "no"
+            - --loglevel
+            - notice
+            {{- else }}
             - --save
             - ""
             - --appendonly
             - "no"
+            {{- end }}
             - --requirepass
             - $(REDIS_PASSWORD)
           env:
@@ -86,9 +101,28 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+      {{- if not .Values.redis.persistence.enabled }}
       volumes:
         - name: data
           emptyDir: {}
+      {{- end }}
+  {{- if .Values.redis.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: redis
+          {{- include "baseline.commonLabels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.redis.persistence.storageClass }}
+        storageClassName: {{ .Values.redis.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.persistence.size | default "1Gi" | quote }}
+  {{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -106,4 +140,19 @@ spec:
       port: 6379
       targetPort: redis
       protocol: TCP
+{{- if .Values.redis.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: redis
+    {{- include "baseline.commonLabels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.redis.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+{{- end }}
 {{- end }}
