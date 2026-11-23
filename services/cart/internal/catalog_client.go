@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand/v2" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- non-cryptographic retry jitter
 	"net"
 	"net/http"
 	"net/url"
@@ -54,28 +53,19 @@ func NewHTTPCatalogClient(baseURL string, client *http.Client) *HTTPCatalogClien
 	}
 }
 
-// GetProduct calls GET {CATALOG_BASE_URL}/api/catalog/products/{id} with 2s timeout and 1 retry with jitter on timeout or 5xx.
+// GetProduct calls GET {CATALOG_BASE_URL}/api/catalog/products/{id} with 2s per-attempt timeout
+// and up to 3 attempts with exponential backoff + jitter on timeout, network error, or 5xx.
 func (c *HTTPCatalogClient) GetProduct(ctx context.Context, productID string) (CatalogProduct, error) {
 	endpoint := fmt.Sprintf("%s/api/catalog/products/%s", c.baseURL, url.PathEscape(productID))
 
-	var lastErr error
-	for attempt := 0; attempt < 2; attempt++ {
-		if attempt > 0 {
-			jitter := time.Duration(30+rand.IntN(70)) * time.Millisecond
-			timer := time.NewTimer(jitter)
-			select {
-			case <-timer.C:
-			case <-ctx.Done():
-				timer.Stop()
-				return CatalogProduct{}, ErrUpstreamTimeout
-			}
-		}
-
+	var product CatalogProduct
+	err := platform.WithRetry(ctx, 3, func() error {
 		reqCtx, cancel := context.WithTimeout(ctx, c.timeout)
+		defer cancel()
+
 		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, endpoint, nil) //nolint:gosec // trusted internal service URL
 		if err != nil {
-			cancel()
-			return CatalogProduct{}, fmt.Errorf("%w: %v", ErrUpstreamUnavailable, err)
+			return platform.Permanent(fmt.Errorf("%w: %v", ErrUpstreamUnavailable, err))
 		}
 		if reqID := platform.RequestIDFromContext(ctx); reqID != "" {
 			req.Header.Set("X-Request-ID", reqID)
@@ -83,45 +73,34 @@ func (c *HTTPCatalogClient) GetProduct(ctx context.Context, productID string) (C
 
 		resp, err := c.client.Do(req) //nolint:gosec // trusted internal service URL
 		if err != nil {
-			cancel()
 			if isTimeoutErr(err) || errors.Is(reqCtx.Err(), context.DeadlineExceeded) {
-				lastErr = ErrUpstreamTimeout
-				continue
+				return ErrUpstreamTimeout
 			}
-			lastErr = ErrUpstreamUnavailable
-			continue
+			return ErrUpstreamUnavailable
 		}
+		defer func() { _ = resp.Body.Close() }()
 
-		var product CatalogProduct
 		switch {
 		case resp.StatusCode == http.StatusOK:
-			decErr := json.NewDecoder(resp.Body).Decode(&product)
-			_ = resp.Body.Close()
-			cancel()
-			if decErr != nil {
-				return CatalogProduct{}, ErrUpstreamUnavailable
+			if decErr := json.NewDecoder(resp.Body).Decode(&product); decErr != nil {
+				return platform.Permanent(ErrUpstreamUnavailable)
 			}
-			return product, nil
+			return nil
 		case resp.StatusCode == http.StatusNotFound:
-			_ = resp.Body.Close()
-			cancel()
-			return CatalogProduct{}, ErrProductNotFound
+			return platform.Permanent(ErrProductNotFound)
 		case resp.StatusCode >= 500:
-			_ = resp.Body.Close()
-			cancel()
-			lastErr = ErrUpstreamUnavailable
-			continue
+			return ErrUpstreamUnavailable
 		default:
-			_ = resp.Body.Close()
-			cancel()
-			return CatalogProduct{}, ErrUpstreamUnavailable
+			return platform.Permanent(ErrUpstreamUnavailable)
 		}
+	})
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return CatalogProduct{}, ErrUpstreamTimeout
+		}
+		return CatalogProduct{}, err
 	}
-
-	if lastErr != nil {
-		return CatalogProduct{}, lastErr
-	}
-	return CatalogProduct{}, ErrUpstreamUnavailable
+	return product, nil
 }
 
 func isTimeoutErr(err error) bool {

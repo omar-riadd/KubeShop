@@ -60,36 +60,49 @@ func NewHTTPCartClient(baseURL string, client *http.Client) *HTTPCartClient {
 	}
 }
 
-// GetCart calls GET {CART_BASE_URL}/api/cart forwarding X-Session-ID and X-Request-ID.
+// GetCart calls GET {CART_BASE_URL}/api/cart forwarding X-Session-ID and X-Request-ID
+// with up to 3 attempts using exponential backoff + jitter on transient network/5xx errors.
 func (c *HTTPCartClient) GetCart(ctx context.Context, sessionID string) (CartSnapshot, error) {
-	reqCtx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
+	var cart CartSnapshot
+	err := platform.WithRetry(ctx, 3, func() error {
+		reqCtx, cancel := context.WithTimeout(ctx, c.timeout)
+		defer cancel()
 
-	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, c.baseURL+"/api/cart", nil) //nolint:gosec // trusted internal service URL
-	if err != nil {
-		return CartSnapshot{}, ErrCartUpstreamUnavailable
-	}
-	req.Header.Set("X-Session-ID", sessionID)
-	if reqID := platform.RequestIDFromContext(ctx); reqID != "" {
-		req.Header.Set("X-Request-ID", reqID)
-	}
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, c.baseURL+"/api/cart", nil) //nolint:gosec // trusted internal service URL
+		if err != nil {
+			return platform.Permanent(ErrCartUpstreamUnavailable)
+		}
+		req.Header.Set("X-Session-ID", sessionID)
+		if reqID := platform.RequestIDFromContext(ctx); reqID != "" {
+			req.Header.Set("X-Request-ID", reqID)
+		}
 
-	resp, err := c.client.Do(req) //nolint:gosec // trusted internal service URL
+		resp, err := c.client.Do(req) //nolint:gosec // trusted internal service URL
+		if err != nil {
+			if isTimeoutErr(err) || errors.Is(reqCtx.Err(), context.DeadlineExceeded) {
+				return ErrCartUpstreamTimeout
+			}
+			return ErrCartUpstreamUnavailable
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		switch {
+		case resp.StatusCode == http.StatusOK:
+			if err := json.NewDecoder(resp.Body).Decode(&cart); err != nil {
+				return platform.Permanent(fmt.Errorf("%w: decode cart: %v", ErrCartUpstreamUnavailable, err))
+			}
+			return nil
+		case resp.StatusCode >= 500:
+			return ErrCartUpstreamUnavailable
+		default:
+			return platform.Permanent(ErrCartUpstreamUnavailable)
+		}
+	})
 	if err != nil {
-		if isTimeoutErr(err) || errors.Is(reqCtx.Err(), context.DeadlineExceeded) {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return CartSnapshot{}, ErrCartUpstreamTimeout
 		}
-		return CartSnapshot{}, ErrCartUpstreamUnavailable
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		return CartSnapshot{}, ErrCartUpstreamUnavailable
-	}
-
-	var cart CartSnapshot
-	if err := json.NewDecoder(resp.Body).Decode(&cart); err != nil {
-		return CartSnapshot{}, fmt.Errorf("%w: decode cart: %v", ErrCartUpstreamUnavailable, err)
+		return CartSnapshot{}, err
 	}
 	return cart, nil
 }
