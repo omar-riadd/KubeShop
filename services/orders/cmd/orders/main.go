@@ -17,7 +17,7 @@ import (
 	"github.com/kubeshop/kubeshop-platform/services/orders/migrations"
 )
 
-const defaultDatabaseURL = "postgres://localhost:5432/kubeshop?sslmode=disable"
+const defaultDatabaseURL = "postgres://localhost:5432/kubeshop?sslmode=require"
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {

@@ -174,6 +174,8 @@ make up
 make down
 ```
 
+> **Note:** When running `orders` outside Docker Compose, `DATABASE_URL` defaults to `sslmode=require` and refuses unencrypted connections; pass an explicit `DATABASE_URL` (as `docker-compose.yml` does) if your local PostgreSQL instance does not have TLS enabled.
+
 ### Run Tests & Linting
 
 ```bash
