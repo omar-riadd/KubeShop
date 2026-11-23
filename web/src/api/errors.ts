@@ -11,6 +11,9 @@ export type ApiErrorCode =
   | 'NOT_FOUND'
   | 'METHOD_NOT_ALLOWED'
   | 'CART_EMPTY'
+  | 'INVALID_TRANSITION'
+  | 'UNAUTHORIZED'
+  | 'RATE_LIMIT_EXCEEDED'
   | 'INTERNAL_ERROR'
   | 'FAULT_INJECTED'
   | 'UPSTREAM_UNAVAILABLE'
@@ -54,6 +57,11 @@ export function getUserErrorMessage(err: unknown): { message: string; requestId?
         return { message: 'Your cart is empty.', requestId: err.requestId };
       case 'MISSING_SESSION':
         return { message: 'Your session expired. Please try again.', requestId: err.requestId };
+      case 'RATE_LIMIT_EXCEEDED':
+        return {
+          message: 'Too many requests. Please wait a moment and try again.',
+          requestId: err.requestId,
+        };
       default:
         return {
           message: 'Something went wrong. Please try again.',

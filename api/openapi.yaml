@@ -377,6 +377,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '422':
           $ref: '#/components/responses/CartEmpty'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalError'
         '502':
@@ -683,6 +685,26 @@ components:
             error:
               code: INVALID_TRANSITION
               message: Order status transition is not allowed
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    RateLimitExceeded:
+      description: Per-session rate limit exceeded
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+        Retry-After:
+          schema:
+            type: string
+          description: Number of seconds to wait before retrying
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Rate limit exceeded
               requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
     InternalError:
       description: Unexpected internal error or injected fault
@@ -1112,6 +1134,7 @@ components:
         - CART_EMPTY
         - INVALID_TRANSITION
         - UNAUTHORIZED
+        - RATE_LIMIT_EXCEEDED
         - INTERNAL_ERROR
         - FAULT_INJECTED
         - UPSTREAM_UNAVAILABLE

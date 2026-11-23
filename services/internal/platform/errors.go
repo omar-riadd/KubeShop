@@ -20,6 +20,7 @@ const (
 	CodeCartEmpty           = "CART_EMPTY"
 	CodeInvalidTransition   = "INVALID_TRANSITION"
 	CodeUnauthorized        = "UNAUTHORIZED"
+	CodeRateLimitExceeded   = "RATE_LIMIT_EXCEEDED"
 	CodeInternalError       = "INTERNAL_ERROR"
 	CodeFaultInjected       = "FAULT_INJECTED"
 	CodeUpstreamUnavailable = "UPSTREAM_UNAVAILABLE"

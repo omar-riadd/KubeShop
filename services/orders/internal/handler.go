@@ -19,6 +19,7 @@ type Handler struct {
 	logger        *slog.Logger
 	ordersCreated prometheus.Counter
 	orderValue    prometheus.Histogram
+	rateLimiter   func(http.Handler) http.Handler
 }
 
 // NewHandler creates an orders Handler and registers orders-specific metrics.
@@ -42,7 +43,13 @@ func NewHandler(store *Store, cart CartClient, cfg platform.Config, logger *slog
 		logger:        logger,
 		ordersCreated: created,
 		orderValue:    value,
+		rateLimiter:   platform.SessionRateLimitMiddleware(2, 5),
 	}
+}
+
+// SetRateLimiter overrides the rate limiter middleware on POST /api/orders (useful in tests).
+func (h *Handler) SetRateLimiter(mw func(http.Handler) http.Handler) {
+	h.rateLimiter = mw
 }
 
 // RegisterRoutes mounts all orders endpoints on the chi router.
@@ -51,7 +58,11 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 	r.Group(func(sr chi.Router) {
 		sr.Use(platform.RequireSession)
-		sr.Post("/api/orders", h.createOrder)
+		if h.rateLimiter != nil {
+			sr.With(h.rateLimiter).Post("/api/orders", h.createOrder)
+		} else {
+			sr.Post("/api/orders", h.createOrder)
+		}
 		sr.Get("/api/orders", h.listOrders)
 		sr.Get("/api/orders/{id}", h.getOrder)
 		sr.Patch("/api/orders/{id}/status", h.updateOrderStatus)

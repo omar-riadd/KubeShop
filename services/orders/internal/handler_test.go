@@ -352,4 +352,52 @@ func TestOrdersIntegrationAndContract(t *testing.T) {
 	if respConflict.StatusCode != http.StatusConflict {
 		t.Fatalf("expected 409 for DELIVERED -> CONFIRMED, got %d", respConflict.StatusCode)
 	}
+
+	// 9. Rate limiting on POST /api/orders (IMP-13)
+	rateLimitSession := uuid.NewString()
+	var lastRateReq *http.Request
+	var lastRateResp *http.Response
+	for i := 0; i < 6; i++ {
+		req, _ := http.NewRequest(http.MethodPost, srv.URL+"/api/orders", bytes.NewBufferString(badBody))
+		req.Header.Set("X-Session-ID", rateLimitSession)
+		req.Header.Set("Idempotency-Key", uuid.NewString())
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("rate limit request %d: %v", i, err)
+		}
+		if i < 5 {
+			if resp.StatusCode != http.StatusBadRequest {
+				_ = resp.Body.Close()
+				t.Fatalf("expected 400 for request %d within burst, got %d", i, resp.StatusCode)
+			}
+			_ = resp.Body.Close()
+		} else {
+			lastRateReq = req
+			lastRateResp = resp
+		}
+	}
+	defer func() { _ = lastRateResp.Body.Close() }()
+	contracttest.AssertResponseValid(t, lastRateReq, lastRateResp)
+	if lastRateResp.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("expected 429 for 6th request exceeding burst, got %d", lastRateResp.StatusCode)
+	}
+	if retryAfter := lastRateResp.Header.Get("Retry-After"); retryAfter == "" {
+		t.Fatalf("expected Retry-After header on 429 response")
+	}
+
+	// Verify fresh session is isolated and not blocked
+	freshSession := uuid.NewString()
+	reqFresh, _ := http.NewRequest(http.MethodPost, srv.URL+"/api/orders", bytes.NewBufferString(badBody))
+	reqFresh.Header.Set("X-Session-ID", freshSession)
+	reqFresh.Header.Set("Idempotency-Key", uuid.NewString())
+	reqFresh.Header.Set("Content-Type", "application/json")
+	respFresh, err := client.Do(reqFresh)
+	if err != nil {
+		t.Fatalf("POST fresh session: %v", err)
+	}
+	defer func() { _ = respFresh.Body.Close() }()
+	if respFresh.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for fresh session within burst, got %d", respFresh.StatusCode)
+	}
 }

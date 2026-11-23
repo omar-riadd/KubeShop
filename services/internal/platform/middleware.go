@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -16,6 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/time/rate"
 )
 
 type ctxKey string
@@ -279,3 +282,124 @@ func routePattern(r *http.Request) string {
 	}
 	return "unmatched"
 }
+
+type sessionLimiterEntry struct {
+	limiter  *rate.Limiter
+	lastSeen atomic.Int64
+}
+
+// SessionRateLimiter manages in-memory token bucket rate limiters keyed by session ID (or IP fallback).
+// Inactive limiters are periodically evicted to prevent unbounded memory growth.
+type SessionRateLimiter struct {
+	limiters sync.Map
+	rate     rate.Limit
+	burst    int
+	ttl      time.Duration
+	stopCh   chan struct{}
+}
+
+// NewSessionRateLimiter creates a per-session token bucket rate limiter.
+// rps specifies allowed requests per second, burst specifies maximum burst size,
+// and ttl specifies how long inactive limiters remain in memory before eviction.
+func NewSessionRateLimiter(rps, burst int, ttl time.Duration) *SessionRateLimiter {
+	if ttl <= 0 {
+		ttl = 3 * time.Minute
+	}
+	rl := &SessionRateLimiter{
+		rate:   rate.Limit(rps),
+		burst:  burst,
+		ttl:    ttl,
+		stopCh: make(chan struct{}),
+	}
+	interval := ttl / 2
+	if interval < 100*time.Millisecond {
+		interval = 100 * time.Millisecond
+	}
+	ticker := time.NewTicker(interval)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				rl.cleanup()
+			case <-rl.stopCh:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	return rl
+}
+
+// Close stops the background eviction goroutine.
+func (rl *SessionRateLimiter) Close() {
+	select {
+	case <-rl.stopCh:
+	default:
+		close(rl.stopCh)
+	}
+}
+
+func (rl *SessionRateLimiter) cleanup() {
+	now := time.Now().Unix()
+	ttlSec := int64(rl.ttl.Seconds())
+	rl.limiters.Range(func(key, value any) bool {
+		entry := value.(*sessionLimiterEntry)
+		if now-entry.lastSeen.Load() > ttlSec {
+			rl.limiters.Delete(key)
+		}
+		return true
+	})
+}
+
+// Allow reports whether a request for the given session key is allowed under the rate limit.
+func (rl *SessionRateLimiter) Allow(key string) bool {
+	now := time.Now().Unix()
+	val, loaded := rl.limiters.Load(key)
+	if !loaded {
+		val, _ = rl.limiters.LoadOrStore(key, &sessionLimiterEntry{
+			limiter: rate.NewLimiter(rl.rate, rl.burst),
+		})
+	}
+	entry := val.(*sessionLimiterEntry)
+	entry.lastSeen.Store(now)
+	return entry.limiter.Allow()
+}
+
+// Middleware returns an HTTP middleware enforcing the rate limit per session or client key.
+func (rl *SessionRateLimiter) Middleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			key := sessionOrClientKey(r)
+			if !rl.Allow(key) {
+				w.Header().Set("Retry-After", "1")
+				WriteError(w, r, http.StatusTooManyRequests, CodeRateLimitExceeded, "Rate limit exceeded")
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func sessionOrClientKey(r *http.Request) string {
+	if sess := SessionIDFromContext(r.Context()); sess != "" {
+		return "session:" + sess
+	}
+	if raw := strings.TrimSpace(r.Header.Get("X-Session-ID")); raw != "" && IsUUIDv4(raw) {
+		return "session:" + strings.ToLower(raw)
+	}
+	if xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); xff != "" {
+		if idx := strings.Index(xff, ","); idx != -1 {
+			return "ip:" + strings.TrimSpace(xff[:idx])
+		}
+		return "ip:" + xff
+	}
+	return "ip:" + r.RemoteAddr
+}
+
+// SessionRateLimitMiddleware is a convenience constructor creating a per-session rate limiter
+// with rps requests per second and burst capacity.
+func SessionRateLimitMiddleware(rps, burst int) func(http.Handler) http.Handler {
+	rl := NewSessionRateLimiter(rps, burst, 3*time.Minute)
+	return rl.Middleware()
+}
+

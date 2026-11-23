@@ -393,7 +393,7 @@ export interface components {
             podName: string;
         };
         /** @enum {string} */
-        ErrorCode: "VALIDATION_ERROR" | "MISSING_SESSION" | "PRODUCT_NOT_FOUND" | "ORDER_NOT_FOUND" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "CART_EMPTY" | "INVALID_TRANSITION" | "UNAUTHORIZED" | "INTERNAL_ERROR" | "FAULT_INJECTED" | "UPSTREAM_UNAVAILABLE" | "UPSTREAM_TIMEOUT";
+        ErrorCode: "VALIDATION_ERROR" | "MISSING_SESSION" | "PRODUCT_NOT_FOUND" | "ORDER_NOT_FOUND" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "CART_EMPTY" | "INVALID_TRANSITION" | "UNAUTHORIZED" | "RATE_LIMIT_EXCEEDED" | "INTERNAL_ERROR" | "FAULT_INJECTED" | "UPSTREAM_UNAVAILABLE" | "UPSTREAM_TIMEOUT";
         ErrorDetail: {
             /** @example customer.email */
             field: string;
@@ -572,6 +572,28 @@ export interface components {
                  *       "error": {
                  *         "code": "INVALID_TRANSITION",
                  *         "message": "Order status transition is not allowed",
+                 *         "requestId": "c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Per-session rate limit exceeded */
+        RateLimitExceeded: {
+            headers: {
+                "X-Request-ID": components["headers"]["X-Request-ID"];
+                "Cache-Control": components["headers"]["Cache-Control"];
+                /** @description Number of seconds to wait before retrying */
+                "Retry-After"?: string;
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "RATE_LIMIT_EXCEEDED",
+                 *         "message": "Rate limit exceeded",
                  *         "requestId": "c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a"
                  *       }
                  *     }
@@ -1042,6 +1064,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             422: components["responses"]["CartEmpty"];
+            429: components["responses"]["RateLimitExceeded"];
             500: components["responses"]["InternalError"];
             502: components["responses"]["UpstreamUnavailable"];
             504: components["responses"]["UpstreamTimeout"];
