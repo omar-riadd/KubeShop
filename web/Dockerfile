@@ -32,6 +32,7 @@ ENV APP_BUILD_TIME=$BUILD_TIME
 
 # Copy custom nginx configuration
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx/security_headers.conf /etc/nginx/security_headers.conf
 
 # Copy entrypoint script
 COPY --chmod=755 docker-entrypoint.d/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
