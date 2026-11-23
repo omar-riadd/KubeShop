@@ -177,6 +177,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Transition an order to the next lifecycle status */
+        patch: operations["updateOrderStatus"];
+        trace?: never;
+    };
     "/api/orders/version": {
         parameters: {
             query?: never;
@@ -323,7 +340,7 @@ export interface components {
              * @example PLACED
              * @enum {string}
              */
-            status: "PLACED";
+            status: "PLACED" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
             items: components["schemas"]["OrderItem"][];
             /** @example 17800 */
             totalCents: number;
@@ -339,6 +356,18 @@ export interface components {
              * @example 2026-11-20T10:15:30Z
              */
             createdAt: string;
+            /**
+             * Format: date-time
+             * @example 2026-11-20T10:20:00Z
+             */
+            updatedAt?: string;
+        };
+        UpdateOrderStatusRequest: {
+            /**
+             * @example CONFIRMED
+             * @enum {string}
+             */
+            status: "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
         };
         OrderList: {
             items: components["schemas"]["Order"][];
@@ -364,7 +393,7 @@ export interface components {
             podName: string;
         };
         /** @enum {string} */
-        ErrorCode: "VALIDATION_ERROR" | "MISSING_SESSION" | "PRODUCT_NOT_FOUND" | "ORDER_NOT_FOUND" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "CART_EMPTY" | "INTERNAL_ERROR" | "FAULT_INJECTED" | "UPSTREAM_UNAVAILABLE" | "UPSTREAM_TIMEOUT";
+        ErrorCode: "VALIDATION_ERROR" | "MISSING_SESSION" | "PRODUCT_NOT_FOUND" | "ORDER_NOT_FOUND" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "CART_EMPTY" | "INVALID_TRANSITION" | "UNAUTHORIZED" | "INTERNAL_ERROR" | "FAULT_INJECTED" | "UPSTREAM_UNAVAILABLE" | "UPSTREAM_TIMEOUT";
         ErrorDetail: {
             /** @example customer.email */
             field: string;
@@ -503,6 +532,46 @@ export interface components {
                  *       "error": {
                  *         "code": "CART_EMPTY",
                  *         "message": "Cart is empty",
+                 *         "requestId": "c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Missing or invalid Authorization header */
+        Unauthorized: {
+            headers: {
+                "X-Request-ID": components["headers"]["X-Request-ID"];
+                "Cache-Control": components["headers"]["Cache-Control"];
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "UNAUTHORIZED",
+                 *         "message": "Authorization header is required",
+                 *         "requestId": "c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Order status transition is not permitted from current state */
+        InvalidTransition: {
+            headers: {
+                "X-Request-ID": components["headers"]["X-Request-ID"];
+                "Cache-Control": components["headers"]["Cache-Control"];
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "INVALID_TRANSITION",
+                 *         "message": "Order status transition is not allowed",
                  *         "requestId": "c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a"
                  *       }
                  *     }
@@ -1008,6 +1077,47 @@ export interface operations {
             };
             400: components["responses"]["MissingSession"];
             404: components["responses"]["OrderNotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateOrderStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Anonymous browser session identifier (UUID v4) */
+                "X-Session-ID": components["parameters"]["SessionIdHeader"];
+                /** @description Per-request correlation ID ([A-Za-z0-9-], max 64 chars) */
+                "X-Request-ID"?: components["parameters"]["RequestIdHeader"];
+                /** @description Bearer token or credentials required to update order status */
+                Authorization: string;
+            };
+            path: {
+                /** @description Order UUID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOrderStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Order status updated */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["X-Request-ID"];
+                    "Cache-Control": components["headers"]["Cache-Control"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Order"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["OrderNotFound"];
+            409: components["responses"]["InvalidTransition"];
             500: components["responses"]["InternalError"];
         };
     };

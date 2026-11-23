@@ -1,0 +1,2 @@
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders DROP COLUMN IF EXISTS updated_at;

@@ -441,6 +441,57 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/orders/{id}/status:
+    patch:
+      operationId: updateOrderStatus
+      tags: [Orders]
+      summary: Transition an order to the next lifecycle status
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token or credentials required to update order status
+          schema:
+            type: string
+            minLength: 1
+        - name: id
+          in: path
+          required: true
+          description: Order UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequest'
+      responses:
+        '200':
+          description: Order status updated
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+            Cache-Control:
+              $ref: '#/components/headers/Cache-Control'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/OrderNotFound'
+        '409':
+          $ref: '#/components/responses/InvalidTransition'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/orders/version:
     get:
       operationId: getOrdersVersion
@@ -600,6 +651,38 @@ components:
             error:
               code: CART_EMPTY
               message: Cart is empty
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    Unauthorized:
+      description: Missing or invalid Authorization header
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Authorization header is required
+              requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
+    InvalidTransition:
+      description: Order status transition is not permitted from current state
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/X-Request-ID'
+        Cache-Control:
+          $ref: '#/components/headers/Cache-Control'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: INVALID_TRANSITION
+              message: Order status transition is not allowed
               requestId: c1f0a8e2-4b3a-4d2e-8a1f-9b7c6d5e4f3a
     InternalError:
       description: Unexpected internal error or injected fault
@@ -936,7 +1019,7 @@ components:
           example: 0b7c1d0e-6f0a-4f43-9d52-2b7a7a2f9b11
         status:
           type: string
-          enum: [PLACED]
+          enum: [PLACED, CONFIRMED, SHIPPED, DELIVERED, CANCELLED]
           example: PLACED
         items:
           type: array
@@ -958,6 +1041,21 @@ components:
           type: string
           format: date-time
           example: '2026-11-20T10:15:30Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-11-20T10:20:00Z'
+
+    UpdateOrderStatusRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [CONFIRMED, SHIPPED, DELIVERED, CANCELLED]
+          example: CONFIRMED
 
     OrderList:
       type: object
@@ -1012,6 +1110,8 @@ components:
         - NOT_FOUND
         - METHOD_NOT_ALLOWED
         - CART_EMPTY
+        - INVALID_TRANSITION
+        - UNAUTHORIZED
         - INTERNAL_ERROR
         - FAULT_INJECTED
         - UPSTREAM_UNAVAILABLE

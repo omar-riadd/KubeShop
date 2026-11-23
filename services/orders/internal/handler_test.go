@@ -272,4 +272,84 @@ func TestOrdersIntegrationAndContract(t *testing.T) {
 	if respVer.StatusCode != http.StatusOK {
 		t.Fatalf("expected 200, got %d", respVer.StatusCode)
 	}
+
+	// 8. PATCH /api/orders/{id}/status — auth, validation, lifecycle chain, and 409 conflict
+	doPatch := func(url, sess, auth, body string) *http.Response {
+		t.Helper()
+		req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBufferString(body))
+		if err != nil {
+			t.Fatalf("new patch req: %v", err)
+		}
+		req.Header.Set("X-Session-ID", sess)
+		if auth != "" {
+			req.Header.Set("Authorization", auth)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("PATCH %s: %v", url, err)
+		}
+		contracttest.AssertResponseValid(t, req, resp)
+		return resp
+	}
+
+	// Missing Authorization -> 401
+	respUnauth := doPatch(srv.URL+"/api/orders/"+created.ID+"/status", sessionID, "", `{"status":"CONFIRMED"}`)
+	_ = respUnauth.Body.Close()
+	if respUnauth.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without Authorization, got %d", respUnauth.StatusCode)
+	}
+
+	// Invalid UUID -> 404
+	respBadID := doPatch(srv.URL+"/api/orders/not-a-uuid/status", sessionID, "Bearer test-token", `{"status":"CONFIRMED"}`)
+	_ = respBadID.Body.Close()
+	if respBadID.StatusCode != http.StatusNotFound {
+		t.Fatalf("expected 404 for invalid uuid, got %d", respBadID.StatusCode)
+	}
+
+	// Unknown order -> 404
+	respMissing := doPatch(srv.URL+"/api/orders/"+uuid.NewString()+"/status", sessionID, "Bearer test-token", `{"status":"CONFIRMED"}`)
+	_ = respMissing.Body.Close()
+	if respMissing.StatusCode != http.StatusNotFound {
+		t.Fatalf("expected 404 for unknown order, got %d", respMissing.StatusCode)
+	}
+
+	// Invalid status value -> 400
+	respBadStatus := doPatch(srv.URL+"/api/orders/"+created.ID+"/status", sessionID, "Bearer test-token", `{"status":"PLACED"}`)
+	_ = respBadStatus.Body.Close()
+	if respBadStatus.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid target status, got %d", respBadStatus.StatusCode)
+	}
+
+	// Malformed JSON -> 400
+	respBadJSON := doPatch(srv.URL+"/api/orders/"+created.ID+"/status", sessionID, "Bearer test-token", `{invalid`)
+	_ = respBadJSON.Body.Close()
+	if respBadJSON.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for malformed json, got %d", respBadJSON.StatusCode)
+	}
+
+	// Valid lifecycle chain: PLACED -> CONFIRMED -> SHIPPED -> DELIVERED
+	for _, nextStatus := range []string{internal.StatusConfirmed, internal.StatusShipped, internal.StatusDelivered} {
+		resp := doPatch(srv.URL+"/api/orders/"+created.ID+"/status", sessionID, "Bearer test-token", `{"status":"`+nextStatus+`"}`)
+		if resp.StatusCode != http.StatusOK {
+			_ = resp.Body.Close()
+			t.Fatalf("expected 200 transitioning to %s, got %d", nextStatus, resp.StatusCode)
+		}
+		var updated internal.Order
+		if err := json.NewDecoder(resp.Body).Decode(&updated); err != nil {
+			_ = resp.Body.Close()
+			t.Fatalf("decode updated order: %v", err)
+		}
+		_ = resp.Body.Close()
+		if updated.Status != nextStatus {
+			t.Fatalf("expected status %s, got %s", nextStatus, updated.Status)
+		}
+	}
+
+	// Terminal state conflict: DELIVERED -> CONFIRMED -> 409
+	respConflict := doPatch(srv.URL+"/api/orders/"+created.ID+"/status", sessionID, "Bearer test-token", `{"status":"CONFIRMED"}`)
+	_ = respConflict.Body.Close()
+	if respConflict.StatusCode != http.StatusConflict {
+		t.Fatalf("expected 409 for DELIVERED -> CONFIRMED, got %d", respConflict.StatusCode)
+	}
 }

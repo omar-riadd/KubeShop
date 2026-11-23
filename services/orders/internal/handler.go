@@ -54,11 +54,16 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		sr.Post("/api/orders", h.createOrder)
 		sr.Get("/api/orders", h.listOrders)
 		sr.Get("/api/orders/{id}", h.getOrder)
+		sr.Patch("/api/orders/{id}/status", h.updateOrderStatus)
 	})
 }
 
 type orderListResponse struct {
 	Items []Order `json:"items"`
+}
+
+type updateOrderStatusRequest struct {
+	Status string `json:"status"`
 }
 
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
@@ -165,5 +170,60 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		platform.WriteError(w, r, http.StatusInternalServerError, platform.CodeInternalError, "Failed to read order")
 		return
 	}
+	platform.WriteJSON(w, http.StatusOK, order)
+}
+
+func (h *Handler) updateOrderStatus(w http.ResponseWriter, r *http.Request) {
+	if strings.TrimSpace(r.Header.Get("Authorization")) == "" {
+		platform.WriteError(w, r, http.StatusUnauthorized, platform.CodeUnauthorized, "Authorization header is required")
+		return
+	}
+
+	orderID := strings.TrimSpace(chi.URLParam(r, "id"))
+	if !platform.IsUUID(orderID) {
+		platform.WriteError(w, r, http.StatusNotFound, platform.CodeOrderNotFound, "Order not found")
+		return
+	}
+
+	var req updateOrderStatusRequest
+	if details := platform.DecodeJSON(r, &req); len(details) > 0 {
+		platform.WriteError(w, r, http.StatusBadRequest, platform.CodeValidationError, "Request validation failed", details...)
+		return
+	}
+
+	req.Status = strings.TrimSpace(req.Status)
+	if !IsValidTargetStatus(req.Status) {
+		platform.WriteError(w, r, http.StatusBadRequest, platform.CodeValidationError, "Request validation failed", platform.ErrorDetail{
+			Field:   "status",
+			Message: "must be one of CONFIRMED, SHIPPED, DELIVERED, CANCELLED",
+		})
+		return
+	}
+
+	sessionID := platform.SessionIDFromContext(r.Context())
+	order, err := h.store.UpdateStatus(r.Context(), sessionID, orderID, req.Status)
+	if err != nil {
+		if errors.Is(err, ErrOrderNotFound) {
+			platform.WriteError(w, r, http.StatusNotFound, platform.CodeOrderNotFound, "Order not found")
+			return
+		}
+		if errors.Is(err, ErrInvalidTransition) {
+			platform.WriteError(w, r, http.StatusConflict, platform.CodeInvalidTransition, "Order status transition is not allowed")
+			return
+		}
+		h.logger.Error("failed to update order status",
+			slog.String("requestId", platform.RequestIDFromContext(r.Context())),
+			slog.String("orderId", orderID),
+			slog.String("error", err.Error()),
+		)
+		platform.WriteError(w, r, http.StatusInternalServerError, platform.CodeInternalError, "Failed to update order status")
+		return
+	}
+
+	h.logger.Info("order status updated",
+		slog.String("requestId", platform.RequestIDFromContext(r.Context())),
+		slog.String("orderId", order.ID),
+		slog.String("status", order.Status),
+	)
 	platform.WriteJSON(w, http.StatusOK, order)
 }

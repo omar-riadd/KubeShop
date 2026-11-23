@@ -18,6 +18,8 @@ const (
 	CodeNotFound            = "NOT_FOUND"
 	CodeMethodNotAllowed    = "METHOD_NOT_ALLOWED"
 	CodeCartEmpty           = "CART_EMPTY"
+	CodeInvalidTransition   = "INVALID_TRANSITION"
+	CodeUnauthorized        = "UNAUTHORIZED"
 	CodeInternalError       = "INTERNAL_ERROR"
 	CodeFaultInjected       = "FAULT_INJECTED"
 	CodeUpstreamUnavailable = "UPSTREAM_UNAVAILABLE"

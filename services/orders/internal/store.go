@@ -15,6 +15,38 @@ import (
 // ErrOrderNotFound is returned when an order does not exist or belongs to another session.
 var ErrOrderNotFound = errors.New("order not found")
 
+// ErrInvalidTransition is returned when an order status transition is not permitted by the lifecycle state machine.
+var ErrInvalidTransition = errors.New("invalid order status transition")
+
+// Order lifecycle statuses.
+const (
+	StatusPlaced    = "PLACED"
+	StatusConfirmed = "CONFIRMED"
+	StatusShipped   = "SHIPPED"
+	StatusDelivered = "DELIVERED"
+	StatusCancelled = "CANCELLED"
+)
+
+// allowedPrevStatuses defines the legal state machine transitions:
+//
+//	PLACED -> CONFIRMED
+//	CONFIRMED -> SHIPPED
+//	SHIPPED -> DELIVERED
+//	PLACED | CONFIRMED -> CANCELLED
+//	DELIVERED | CANCELLED -> (terminal)
+var allowedPrevStatuses = map[string][]string{
+	StatusConfirmed: {StatusPlaced},
+	StatusShipped:   {StatusConfirmed},
+	StatusDelivered: {StatusShipped},
+	StatusCancelled: {StatusPlaced, StatusConfirmed},
+}
+
+// IsValidTargetStatus reports whether status is a valid target for UpdateStatus.
+func IsValidTargetStatus(status string) bool {
+	_, ok := allowedPrevStatuses[status]
+	return ok
+}
+
 // OrderItem matches Shared Contract §1.7 OrderItem schema.
 type OrderItem struct {
 	ProductID      string `json:"productId"`
@@ -34,6 +66,7 @@ type Order struct {
 	Customer        Customer        `json:"customer"`
 	ShippingAddress ShippingAddress `json:"shippingAddress"`
 	CreatedAt       string          `json:"createdAt"`
+	UpdatedAt       string          `json:"updatedAt,omitempty"`
 }
 
 // Store persists orders and order items in PostgreSQL.
@@ -59,7 +92,7 @@ func (s *Store) FindByIdempotencyKey(ctx context.Context, sessionID, idempotency
 	row := s.pool.QueryRow(ctx, `
 		SELECT id, status, customer_name, customer_email,
 		       ship_line1, ship_line2, ship_city, ship_postal_code, ship_country,
-		       currency, total_cents, created_at
+		       currency, total_cents, created_at, updated_at
 		FROM orders
 		WHERE session_id = $1 AND idempotency_key = $2
 	`, sessionID, idempotencyKey)
@@ -121,8 +154,8 @@ func (s *Store) Create(ctx context.Context, sessionID, idempotencyKey string, re
 			id, session_id, idempotency_key, status,
 			customer_name, customer_email,
 			ship_line1, ship_line2, ship_city, ship_postal_code, ship_country,
-			currency, total_cents, created_at
-		) VALUES ($1, $2, $3, 'PLACED', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+			currency, total_cents, created_at, updated_at
+		) VALUES ($1, $2, $3, 'PLACED', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13)
 	`,
 		orderID, sessionID, idemParam,
 		req.Customer.Name, req.Customer.Email,
@@ -161,13 +194,14 @@ func (s *Store) Create(ctx context.Context, sessionID, idempotencyKey string, re
 
 	return Order{
 		ID:              orderID,
-		Status:          "PLACED",
+		Status:          StatusPlaced,
 		Items:           items,
 		TotalCents:      totalCents,
 		Currency:        currency,
 		Customer:        req.Customer,
 		ShippingAddress: req.ShippingAddress,
 		CreatedAt:       now.Format(time.RFC3339),
+		UpdatedAt:       now.Format(time.RFC3339),
 	}, false, nil
 }
 
@@ -176,7 +210,7 @@ func (s *Store) Get(ctx context.Context, sessionID, orderID string) (Order, erro
 	row := s.pool.QueryRow(ctx, `
 		SELECT id, status, customer_name, customer_email,
 		       ship_line1, ship_line2, ship_city, ship_postal_code, ship_country,
-		       currency, total_cents, created_at
+		       currency, total_cents, created_at, updated_at
 		FROM orders
 		WHERE id = $1 AND session_id = $2
 	`, orderID, sessionID)
@@ -197,12 +231,57 @@ func (s *Store) Get(ctx context.Context, sessionID, orderID string) (Order, erro
 	return order, nil
 }
 
+// UpdateStatus transitions an order's status atomically using optimistic locking
+// against allowedPrevStatuses. Returns ErrOrderNotFound if the order does not exist
+// for sessionID, or ErrInvalidTransition if the current status cannot transition to newStatus.
+func (s *Store) UpdateStatus(ctx context.Context, sessionID, orderID, newStatus string) (Order, error) {
+	allowedPrev, ok := allowedPrevStatuses[newStatus]
+	if !ok {
+		return Order{}, ErrInvalidTransition
+	}
+
+	row := s.pool.QueryRow(ctx, `
+		UPDATE orders
+		SET status = $1, updated_at = NOW()
+		WHERE id = $2 AND session_id = $3 AND status = ANY($4)
+		RETURNING id, status, customer_name, customer_email,
+		          ship_line1, ship_line2, ship_city, ship_postal_code, ship_country,
+		          currency, total_cents, created_at, updated_at
+	`, newStatus, orderID, sessionID, allowedPrev)
+
+	order, err := scanOrder(row)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return Order{}, fmt.Errorf("update order status: %w", err)
+		}
+		var exists bool
+		checkErr := s.pool.QueryRow(ctx,
+			`SELECT EXISTS(SELECT 1 FROM orders WHERE id = $1 AND session_id = $2)`,
+			orderID, sessionID,
+		).Scan(&exists)
+		if checkErr != nil {
+			return Order{}, fmt.Errorf("check order exists: %w", checkErr)
+		}
+		if !exists {
+			return Order{}, ErrOrderNotFound
+		}
+		return Order{}, ErrInvalidTransition
+	}
+
+	items, err := s.loadOrderItems(ctx, order.ID)
+	if err != nil {
+		return Order{}, err
+	}
+	order.Items = items
+	return order, nil
+}
+
 // List returns up to 50 orders for sessionID, newest first.
 func (s *Store) List(ctx context.Context, sessionID string) ([]Order, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id, status, customer_name, customer_email,
 		       ship_line1, ship_line2, ship_city, ship_postal_code, ship_country,
-		       currency, total_cents, created_at
+		       currency, total_cents, created_at, updated_at
 		FROM orders
 		WHERE session_id = $1
 		ORDER BY created_at DESC
@@ -312,17 +391,19 @@ func scanOrder(r rowScanner) (Order, error) {
 	var (
 		o         Order
 		createdAt time.Time
+		updatedAt time.Time
 	)
 	err := r.Scan(
 		&o.ID, &o.Status,
 		&o.Customer.Name, &o.Customer.Email,
 		&o.ShippingAddress.Line1, &o.ShippingAddress.Line2,
 		&o.ShippingAddress.City, &o.ShippingAddress.PostalCode, &o.ShippingAddress.Country,
-		&o.Currency, &o.TotalCents, &createdAt,
+		&o.Currency, &o.TotalCents, &createdAt, &updatedAt,
 	)
 	if err != nil {
 		return Order{}, err
 	}
 	o.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+	o.UpdatedAt = updatedAt.UTC().Format(time.RFC3339)
 	return o, nil
 }
