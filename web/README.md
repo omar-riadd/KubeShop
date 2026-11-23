@@ -8,7 +8,7 @@ React 19 storefront Single Page Application (SPA) for KubeShop ("Gear for engine
 - **Platform Status & Rollout Observer (`/status`)**: Live canary rollout observer measuring service health, response latency, active pod names, and real-time version traffic distributions.
 - **Theme**: Light, Dark, and System modes persisted to `localStorage["kubeshop.theme"]` with synchronous `<script src="/theme-init.js">` in `<head>` to prevent Flash of Unstyled Content (FOUC) under strict Content Security Policy.
 - **Accessibility**: Built with semantic landmarks, keyboard navigation, visible focus indicators, screen reader live regions, and verified zero WCAG 2.1 AA violations via `@axe-core/playwright`.
-- **Production Container**: Multi-stage Dockerfile based on `nginxinc/nginx-unprivileged` running as non-root user `101`, `readOnlyRootFilesystem: true`, dynamic `/tmp/runtime-config.json` entrypoint, and strict CSP (`script-src 'self'`).
+- **Production Container**: Multi-stage Dockerfile based on `nginxinc/nginx-unprivileged` running as non-root user `101`, `readOnlyRootFilesystem: true`, dynamic `/tmp/runtime-config.json` entrypoint, modular DRY security headers (`include /etc/nginx/security_headers.conf`), and strict CSP (`script-src 'self'`).
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ React 19 storefront Single Page Application (SPA) for KubeShop ("Gear for engine
 - **Server State & Forms**: TanStack Query v5, React Hook Form + Zod v4
 - **Styling**: Tailwind CSS v4 + Design tokens (`tokens.css`) + `lucide-react` icons
 - **Fonts**: Self-hosted `@fontsource-variable/inter` and `@fontsource-variable/jetbrains-mono`
-- **Testing**: Vitest + Testing Library, Playwright + `@axe-core/playwright`
+- **Testing**: Vitest + Testing Library (component test suites across all 6 pages; 36/36 tests passing), Playwright + `@axe-core/playwright`
 - **Mocks**: Mock Service Worker (MSW) for offline unit testing
 
 ## Scripts

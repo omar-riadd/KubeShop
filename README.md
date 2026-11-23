@@ -65,14 +65,14 @@ flowchart TD
 
 ### Microservices (`services/`)
 - **`catalog`**: High-performance Go service loading 12 engineering gear products into memory at startup. Stateless, filtered search, pagination, category listing.
-- **`cart`**: Go service managing anonymous customer sessions via `X-Session-ID` in Redis hashes (24h TTL). Performs snapshotting from `catalog`.
-- **`orders`**: Go service executing order placement within an ACID transaction on CloudNativePG (PostgreSQL 17), with idempotency key replay, batch order-item loading (`WHERE order_id = ANY($1)`), empty cart validation, and automatic cart clearing.
-- **`internal/platform`**: Shared package providing structured JSON logging (`slog`), OpenTelemetry tracing & propagation, Prometheus RED metrics, graceful shutdown with gateway drain delay, request body limits (16 KiB), and fault injection (`FAULT_ERROR_RATE`, `FAULT_LATENCY_MS`).
+- **`cart`**: Go service managing anonymous customer sessions via `X-Session-ID` in Redis hashes (24h TTL). Performs snapshotting from `catalog` with exponential backoff retry.
+- **`orders`**: Go service executing order placement within an ACID transaction on CloudNativePG (PostgreSQL 17), with idempotency key replay, batch order-item loading (`WHERE order_id = ANY($1)`), empty cart validation, order status lifecycle management (`PATCH /api/orders/{id}/status`), per-session token-bucket rate limiting (`rps=2, burst=5`), and automatic cart clearing.
+- **`internal/platform`**: Shared package providing structured JSON logging (`slog`), OpenTelemetry tracing & propagation, Prometheus RED metrics, graceful shutdown with gateway drain delay, request body limits (16 KiB), fault injection (`FAULT_ERROR_RATE`, `FAULT_LATENCY_MS`), exponential backoff retries with jitter (`WithRetry`), and session rate limiting (`SessionRateLimiter`).
 
 ### Frontend SPA (`web/`)
 - **React 19 + TypeScript + Vite**: Responsive desk gear storefront with Tailwind CSS v4 design tokens, TanStack Query v5, route-level `React.lazy` + `Suspense` code splitting (32.58 kB entry chunk), accessible components (WCAG 2.1 AA), and zero-FOUC theme switching (light/dark/system).
 - **Platform Status Dashboard (`/status`)**: Live canary rollout observer measuring service health, response latency, active pod names, and real-time version traffic distributions.
-- **Hardened Nginx**: Runs as unprivileged user `101`, `readOnlyRootFilesystem: true`, dynamic runtime configuration via `/tmp/runtime-config.json`, and strict Content Security Policy (`script-src 'self'`).
+- **Hardened Nginx**: Runs as unprivileged user `101`, `readOnlyRootFilesystem: true`, dynamic runtime configuration via `/tmp/runtime-config.json`, DRY modular security headers (`include /etc/nginx/security_headers.conf`), and strict Content Security Policy (`script-src 'self'`).
 
 ### Infrastructure as Code (`infra/terraform/`)
 - **`bootstrap/`**: Versioned, KMS-encrypted S3 remote state bucket with native S3 locking (`use_lockfile = true`, Terraform >= 1.11; no DynamoDB table needed).
@@ -87,7 +87,7 @@ flowchart TD
 
 ### GitOps & Progressive Delivery (`deploy/`, `gitops/`)
 - **Shared Helm Chart (`deploy/charts/app`)**: Single chart rendering all 4 workloads (`catalog`, `cart`, `orders`, `web`) with `values.schema.json` enforcement, Argo Rollouts (canary for APIs, blueGreen for web), HTTPRoutes, ServiceMonitors, and NetworkPolicies.
-- **Environment Baseline Chart (`deploy/charts/env-baseline`)**: Per-environment namespace quotas, default-deny NetworkPolicies, Redis, CloudNativePG cluster, and synthetic traffic generator (`k6`).
+- **Environment Baseline Chart (`deploy/charts/env-baseline`)**: Per-environment namespace quotas, default-deny NetworkPolicies, Redis StatefulSet with conditional PVC persistence (`gp3`, RDB `--save 60 1`) and PodDisruptionBudget, CloudNativePG cluster, and synthetic traffic generator (`k6`).
 - **Argo CD GitOps**:
   - `gitops/bootstrap/`: Root bootstrap Application.
   - `gitops/platform/`: `RollingSync` ApplicationSet deploying 14 platform addons in progressive sync waves (cert-manager, external-secrets, kyverno, argo-rollouts, cloudnative-pg, keda, kube-prometheus-stack, envoy-gateway, external-dns, loki, tempo, alloy, otel-collector, opencost) + Wave 2 manifests.
@@ -185,8 +185,8 @@ make test
 # k6 end-to-end smoke test (against running 'make up' stack)
 make load-test
 
-# Frontend unit tests (Vitest)
-pnpm --dir web test
+# Frontend unit & component tests (Vitest + RTL + MSW; 36/36 passing)
+pnpm --dir web test --run
 
 # Frontend production build & typecheck
 pnpm --dir web build
@@ -223,7 +223,7 @@ For initial repository and cloud onboarding, see the [Repository Setup Runbook](
 ## 6. Documentation & Runbooks
 
 - **Architecture & Decisions**: [System Architecture](docs/architecture.md) · [ADRs (0001–0008)](docs/adr/README.md) · [UI Design Notes](docs/ui/design-notes.md)
-- **Improvement Roadmap**: [14-Step Improvement Plan](improve-plan.md) (7/14 steps complete; 18 audit findings across pipeline, security, perf, reliability, quality, and DX)
+- **Improvement Roadmap**: [14-Step Improvement Plan](improve-plan.md) (14/14 steps complete — ALL STEPS COMPLETED; 18 audit findings resolved across pipeline, security, perf, reliability, quality, and DX)
 - **Demos & FinOps**: [5-Minute Demo Script](docs/demo-script.md) · [Incident & Canary Demo](docs/incident-demo.md) · [FinOps Cost Analysis](docs/cost.md)
 - **Operational Runbooks**:
   - [Repository Setup](docs/runbooks/repo-setup.md) · [Cluster Bootstrap](docs/runbooks/bootstrap.md) · [GitOps Promotion](docs/runbooks/promotion.md)

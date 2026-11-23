@@ -20,9 +20,9 @@ You are the **BACKEND agent**. You own everything in the repo except `web/**`, `
 > Read `plan.md` and `ui.md` completely. Section 1 is identical in both and is the source of truth. You are the BACKEND agent. Execute `plan.md` phases in order, starting with Phase 0 and Phase 1 so milestones M0 and M1 unblock the UI agent. Stop and ask before any cloud-cost action.
 ---
 
-## 1. Shared Contract v1.0
+## 1. Shared Contract v1.1
 
-> **IDENTICAL in `plan.md` and `ui.md`.** This section is the single source of truth for everything both sides depend on. If anything elsewhere in a file contradicts this section, **this section wins**. To change it, follow §1.15.
+> **IDENTICAL in `plan.md` and `ui.md`.** This section is the single source of truth for everything both sides depend on. If anything elsewhere in a file contradicts this section, **this section wins**. To change it, follow §1.15. See `docs/CONTRACT-CHANGES.md`.
 
 ### 1.1 Project identity
 
@@ -167,9 +167,10 @@ Quantity per line: integer **1–20**. Anything else, or an add that would excee
 
 | Method and path | Description |
 |---|---|
-| `POST /api/orders` | Body `OrderRequest`; header `Idempotency-Key`. Reads the cart, stores the order, clears the cart. → `Order`. Empty cart → `422 CART_EMPTY` |
+| `POST /api/orders` | Body `OrderRequest`; header `Idempotency-Key`. Reads the cart, stores the order, clears the cart. Rate limited to 2 req/s (burst 5) per session. → `Order`. Empty cart → `422 CART_EMPTY`; rate limited → `429 RATE_LIMIT_EXCEEDED` |
 | `GET /api/orders` | The session's orders, newest first, max 50 → `{"items":[Order]}` |
 | `GET /api/orders/{id}` | → `Order`, or `404 ORDER_NOT_FOUND` (also when the order belongs to another session) |
+| `PATCH /api/orders/{id}/status` | Body `{"status":"CONFIRMED|SHIPPED|DELIVERED|CANCELLED"}`; header `Authorization: Bearer <token>`. Transitions order lifecycle via optimistic locking. Invalid transition → `409 INVALID_TRANSITION`; unauthorized → `401 UNAUTHORIZED` |
 | `GET /api/orders/version` | → `Version` |
 
 ```json
@@ -187,7 +188,8 @@ Validation (identical on server and in the UI form):
  "totalCents":17800,"currency":"USD",
  "customer":{"name":"Ada Lovelace","email":"ada@example.com"},
  "shippingAddress":{"line1":"1 Analytical St","line2":"","city":"London","postalCode":"N1 9GU","country":"GB"},
- "createdAt":"2026-11-20T10:15:30Z"}
+ "createdAt":"2026-11-20T10:15:30Z",
+ "updatedAt":"2026-11-20T10:15:30Z"}
 ```
 
 **Version** (same shape for all three services; exempt from fault injection; used by the UI Status page)
@@ -209,9 +211,12 @@ Locally: `environment:"local"`, `version:"dev"`, `gitSha:"local"`, `podName` = h
 |---|---|---|
 | 400 | `VALIDATION_ERROR` | malformed or invalid body/query, unknown fields, quantity out of range |
 | 400 | `MISSING_SESSION` | `X-Session-ID` missing or not a UUID |
+| 401 | `UNAUTHORIZED` | `Authorization` header missing or invalid on status update |
 | 404 | `PRODUCT_NOT_FOUND` / `ORDER_NOT_FOUND` / `NOT_FOUND` | unknown product, order, or route |
 | 405 | `METHOD_NOT_ALLOWED` | |
+| 409 | `INVALID_TRANSITION` | order status transition not permitted from current state |
 | 422 | `CART_EMPTY` | placing an order with an empty cart |
+| 429 | `RATE_LIMIT_EXCEEDED` | per-session rate limit exceeded on order placement |
 | 500 | `INTERNAL_ERROR` | unexpected failure |
 | 500 | `FAULT_INJECTED` | fault injection active (§1.13) |
 | 502 | `UPSTREAM_UNAVAILABLE` | cart→catalog or orders→cart failed |

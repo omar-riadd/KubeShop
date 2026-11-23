@@ -33,10 +33,10 @@ flowchart TD
         end
 
         subgraph Data["State & Persistence (env-baseline)"]
-            CartStable -- "GET /api/catalog/products/{id} (2s timeout)" --> CatalogStable
-            CartStable -- "Hash cart:{sessionId} (24h TTL)" --> Redis[("Redis 7 (in-memory)")]
-            OrdersStable -- "GET / DELETE /api/cart" --> CartStable
-            OrdersStable -- "ACID Tx + Idempotency-Key" --> PG[("CloudNativePG (orders-db)")]
+            CartStable -- "GET /api/catalog/products/{id} (WithRetry)" --> CatalogStable
+            CartStable -- "Hash cart:{sessionId} (24h TTL)" --> Redis[("Redis 7.4 (StatefulSet, RDB PVC)")]
+            OrdersStable -- "GET / DELETE /api/cart (WithRetry)" --> CartStable
+            OrdersStable -- "ACID Tx + Idempotency-Key + Lifecycle" --> PG[("CloudNativePG (orders-db)")]
         end
     end
 ```
@@ -44,7 +44,8 @@ flowchart TD
 ### Key Runtime Guarantees
 - **No Path Rewriting**: Every backend serves its own prefix (`/api/catalog`, `/api/cart`, `/api/orders`), matching local Compose and Kubernetes routing identically.
 - **Admin Port Isolation**: Backend admin endpoints (`:9090/healthz`, `:9090/readyz`, `:9090/metrics`) are never exposed on Gateway `HTTPRoute` objects.
-- **Rate Limiting**: Production `BackendTrafficPolicy` enforces `30 req/s` per client IP on `/api/*`.
+- **Defense-in-Depth Rate Limiting**: Gateway-level `BackendTrafficPolicy` enforces `30 req/s` per client IP on `/api/*`, paired with an in-process per-session token-bucket limiter (`rps=2, burst=5`) on `POST /api/orders` returning `429 RATE_LIMIT_EXCEEDED`.
+- **Resilient Upstream Communication**: Service-to-service HTTP requests (`cart` → `catalog`, `orders` → `cart`) employ exponential backoff with jitter (`100ms`–`5s`, 3 attempts) for transient 5xx/network errors while fast-failing client errors.
 - **Node Isolation**: `dev`, `staging`, and platform addons schedule on EC2 Spot nodes; `prod` workloads schedule exclusively on `ondemand` nodes via `nodeSelector: workload=prod` and matching taint toleration.
 
 ---
