@@ -13,4 +13,5 @@ regexes = [
 ]
 paths = [
   '''^docs/PLACEHOLDERS\.md$''',
+  '''^security\.md$''',
 ]
