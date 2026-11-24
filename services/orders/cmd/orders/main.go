@@ -58,7 +58,17 @@ func main() {
 	poolCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	pool, err := pgxpool.New(poolCtx, databaseURL)
+	poolCfg, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		logger.Error("failed to parse postgres pool config", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	poolCfg.MaxConns = 25
+	poolCfg.MinConns = 5
+	poolCfg.MaxConnLifetime = 30 * time.Minute
+	poolCfg.MaxConnIdleTime = 5 * time.Minute
+
+	pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg)
 	if err != nil {
 		logger.Error("failed to initialize postgres pool", slog.String("error", err.Error()))
 		os.Exit(1)
