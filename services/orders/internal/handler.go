@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"crypto/subtle"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -16,6 +17,7 @@ type Handler struct {
 	store         *Store
 	cart          CartClient
 	cfg           platform.Config
+	adminToken    string
 	logger        *slog.Logger
 	ordersCreated prometheus.Counter
 	orderValue    prometheus.Histogram
@@ -23,7 +25,7 @@ type Handler struct {
 }
 
 // NewHandler creates an orders Handler and registers orders-specific metrics.
-func NewHandler(store *Store, cart CartClient, cfg platform.Config, logger *slog.Logger, reg prometheus.Registerer) *Handler {
+func NewHandler(store *Store, cart CartClient, cfg platform.Config, adminToken string, logger *slog.Logger, reg prometheus.Registerer) *Handler {
 	created := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "orders_created_total",
 		Help: "Total number of orders placed.",
@@ -40,6 +42,7 @@ func NewHandler(store *Store, cart CartClient, cfg platform.Config, logger *slog
 		store:         store,
 		cart:          cart,
 		cfg:           cfg,
+		adminToken:    strings.TrimSpace(adminToken),
 		logger:        logger,
 		ordersCreated: created,
 		orderValue:    value,
@@ -185,8 +188,8 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateOrderStatus(w http.ResponseWriter, r *http.Request) {
-	if strings.TrimSpace(r.Header.Get("Authorization")) == "" {
-		platform.WriteError(w, r, http.StatusUnauthorized, platform.CodeUnauthorized, "Authorization header is required")
+	if !h.isAuthorizedAdmin(r.Header.Get("Authorization")) {
+		platform.WriteError(w, r, http.StatusUnauthorized, platform.CodeUnauthorized, "Valid admin Bearer token is required")
 		return
 	}
 
@@ -237,4 +240,19 @@ func (h *Handler) updateOrderStatus(w http.ResponseWriter, r *http.Request) {
 		slog.String("status", order.Status),
 	)
 	platform.WriteJSON(w, http.StatusOK, order)
+}
+
+func (h *Handler) isAuthorizedAdmin(authHeader string) bool {
+	if h.adminToken == "" {
+		return false
+	}
+	parts := strings.SplitN(strings.TrimSpace(authHeader), " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return false
+	}
+	token := strings.TrimSpace(parts[1])
+	if token == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(token), []byte(h.adminToken)) == 1
 }

@@ -107,7 +107,7 @@ func TestHTTPCartClientAndHandlerErrorPaths(t *testing.T) {
 	logger := platform.NewLogger(cfg, io.Discard)
 	reg := platform.NewRegistry()
 	router := platform.NewRouter(cfg, logger, nil)
-	h := internal.NewHandler(store, cc, cfg, logger, reg)
+	h := internal.NewHandler(store, cc, cfg, "", logger, reg)
 	h.RegisterRoutes(router)
 
 	sess := uuid.NewString()

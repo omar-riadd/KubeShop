@@ -96,6 +96,7 @@ services:
       APP_GIT_SHA: local
       DATABASE_URL: postgres://kubeshop:kubeshop-local-dev-only@postgres:5432/kubeshop?sslmode=disable
       CART_BASE_URL: http://cart:8080
+      ADMIN_AUTH_TOKEN: kubeshop-dev-admin-secret
       SHUTDOWN_DELAY: 0s
     depends_on:
       postgres:

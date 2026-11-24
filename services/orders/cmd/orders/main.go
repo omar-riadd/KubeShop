@@ -50,6 +50,10 @@ func main() {
 
 	databaseURL := platform.EnvOrDefault("DATABASE_URL", defaultDatabaseURL)
 	cartBaseURL := platform.EnvOrDefault("CART_BASE_URL", "http://localhost:8082")
+	adminAuthToken := platform.EnvOrDefault("ADMIN_AUTH_TOKEN", "")
+	if adminAuthToken == "" {
+		logger.Warn("ADMIN_AUTH_TOKEN is not set; admin order status transitions will be rejected")
+	}
 
 	poolCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -68,7 +72,7 @@ func main() {
 	metrics := platform.NewHTTPMetrics(reg, cfg.ServiceName)
 	router := platform.NewRouter(cfg, logger, metrics)
 
-	handler := internal.NewHandler(store, cartClient, cfg, logger, reg)
+	handler := internal.NewHandler(store, cartClient, cfg, adminAuthToken, logger, reg)
 	handler.RegisterRoutes(router)
 
 	if err := platform.RunServers(cfg, logger, router, reg, store.Ping); err != nil {

@@ -448,16 +448,11 @@ paths:
       operationId: updateOrderStatus
       tags: [Orders]
       summary: Transition an order to the next lifecycle status
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/SessionIdHeader'
         - $ref: '#/components/parameters/RequestIdHeader'
-        - name: Authorization
-          in: header
-          required: true
-          description: Bearer token or credentials required to update order status
-          schema:
-            type: string
-            minLength: 1
         - name: id
           in: path
           required: true
@@ -517,6 +512,12 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Admin Bearer token required to update order lifecycle status
+
   parameters:
     SessionIdHeader:
       name: X-Session-ID
