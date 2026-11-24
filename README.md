@@ -70,9 +70,17 @@ flowchart TD
 - **`internal/platform`**: Shared package providing structured JSON logging (`slog`), OpenTelemetry tracing & propagation, Prometheus RED metrics, graceful shutdown with gateway drain delay, request body limits (16 KiB), fault injection (`FAULT_ERROR_RATE`, `FAULT_LATENCY_MS`), exponential backoff retries with jitter (`WithRetry`), and session rate limiting (`SessionRateLimiter`).
 
 ### Frontend SPA (`web/`)
-- **React 19 + TypeScript + Vite**: Responsive desk gear storefront with Tailwind CSS v4 design tokens, TanStack Query v5, route-level `React.lazy` + `Suspense` code splitting (32.58 kB entry chunk), accessible components (WCAG 2.1 AA), and zero-FOUC theme switching (light/dark/system).
+- **React 19 + TypeScript + Vite**: Responsive desk gear storefront with Tailwind CSS v4 design tokens, TanStack Query v5, route-level `React.lazy` + `Suspense` code splitting (32.58 kB entry chunk), zero WCAG 2.1 AA violations (verified with Axe), and zero-FOUC theme switching (light/dark/system).
+- **Flagship E-Commerce UX**:
+  - **Instant `Cmd+K` Command Palette**: Global quick search (`Cmd+K`, `Ctrl+K`, `/`) with category pills, live query filtering, and keyboard navigation (`↑`/`↓`/`Enter`).
+  - **Slide-Out Mini-Cart Drawer**: Slide-over drawer with real-time dynamic Free Priority SRE Dispatch progress bar ($75 threshold), in-drawer quantity management, and direct checkout CTA.
+  - **Floating Sticky Quick-Buy**: Context-aware floating bar on product pages with instant Cart Drawer integration.
+  - **Category-Tailored Unboxing ("What's in the Box")**: Technical packaging and accessory breakdown for each hardware gear category.
+  - **Side-by-Side Spec Comparison**: Apple Store-style modal comparison matrix evaluating form-factor, switches, connectivity, latency, and weight.
+  - **Frequently Bought Together Bundles**: Recommended gear bundles with automatic 10% bundle savings.
 - **Platform Status Dashboard (`/status`)**: Live canary rollout observer measuring service health, response latency, active pod names, and real-time version traffic distributions.
 - **Hardened Nginx**: Runs as unprivileged user `101`, `readOnlyRootFilesystem: true`, dynamic runtime configuration via `/tmp/runtime-config.json`, DRY modular security headers (`include /etc/nginx/security_headers.conf`), and strict Content Security Policy (`script-src 'self'`).
+- **Comprehensive Test Harness**: 53 Vitest unit & component tests across 15 test suites and 15 Playwright E2E & WCAG 2.1 AA accessibility suites.
 
 ### Infrastructure as Code (`infra/terraform/`)
 - **`bootstrap/`**: Versioned, KMS-encrypted S3 remote state bucket with native S3 locking (`use_lockfile = true`, Terraform >= 1.11; no DynamoDB table needed).

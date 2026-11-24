@@ -5,6 +5,12 @@ React 19 storefront Single Page Application (SPA) for KubeShop ("Gear for engine
 ## Features
 
 - **Storefront**: Product catalog with search, category filtering, product details, cart with optimistic updates, accessible checkout form with client & server validation, order confirmation, and order history.
+- **Instant `Cmd+K` Command Palette**: Global quick search activated via `Cmd+K`, `Ctrl+K`, `/`, or header search trigger with category filtering pills, live catalog querying, and keyboard navigation (`↑`/`↓`/`Enter`).
+- **Slide-Out Mini-Cart Drawer**: Slide-over cart drawer with real-time dynamic Free Priority SRE Dispatch progress bar ($75 threshold), inline item quantity controls, delete confirmations, and direct checkout CTA.
+- **Floating Sticky Quick-Buy**: High-converting floating action bar that slides into view when scrolling past the main buy action on product detail pages.
+- **Technical Hardware Unboxing ("What's in the Box")**: Category-tailored spec grids detailing cables, adapters, tools, extra switches, and manuals.
+- **Side-by-Side Spec Comparison**: Apple Store-style modal comparison matrix evaluating form factors, switch types, connectivity, polling rates, and dimensions.
+- **Frequently Bought Together Bundles**: Complementary product pairings with real-time subtotal calculation and an automatic 10% bundle discount.
 - **Platform Status & Rollout Observer (`/status`)**: Live canary rollout observer measuring service health, response latency, active pod names, and real-time version traffic distributions.
 - **Theme**: Light, Dark, and System modes persisted to `localStorage["kubeshop.theme"]` with synchronous `<script src="/theme-init.js">` in `<head>` to prevent Flash of Unstyled Content (FOUC) under strict Content Security Policy.
 - **Accessibility**: Built with semantic landmarks, keyboard navigation, visible focus indicators, screen reader live regions, and verified zero WCAG 2.1 AA violations via `@axe-core/playwright`.
@@ -17,7 +23,7 @@ React 19 storefront Single Page Application (SPA) for KubeShop ("Gear for engine
 - **Server State & Forms**: TanStack Query v5, React Hook Form + Zod v4
 - **Styling**: Tailwind CSS v4 + Design tokens (`tokens.css`) + `lucide-react` icons
 - **Fonts**: Self-hosted `@fontsource-variable/inter` and `@fontsource-variable/jetbrains-mono`
-- **Testing**: Vitest + Testing Library (component test suites across all 6 pages; 36/36 tests passing), Playwright + `@axe-core/playwright`
+- **Testing**: Vitest + Testing Library (component & unit test suites across all components & pages; 53/53 tests passing across 15 suites), Playwright + `@axe-core/playwright` (15/15 E2E & WCAG 2.1 AA tests passing)
 - **Mocks**: Mock Service Worker (MSW) for offline unit testing
 
 ## Scripts
@@ -57,8 +63,14 @@ web/
 ├── public/                       # Static product SVGs, favicon, synchronous theme-init.js
 ├── src/
 │   ├── api/                      # Fetch client, session ID, OpenAPI generated schema.d.ts, hooks
-│   ├── components/               # Design-system UI primitives, layout, product, cart, status
-│   ├── lib/                      # Currency formatting, UUID, theme helpers
+│   ├── components/
+│   │   ├── cart/                 # CartDrawer, CartDrawer item list
+│   │   ├── layout/               # Header (with Cmd+K trigger), Footer, Layout, ErrorBoundary
+│   │   ├── product/              # StickyQuickBuy, WhatsInTheBox, SpecComparisonModal, BundleOffer
+│   │   ├── search/               # CommandPalette modal, search inputs, result listings
+│   │   └── ui/                   # Design tokens: Button, Badge, Card, Dialog, Toast, Stepper, etc.
+│   ├── context/                  # CartDrawerContext, SearchContext
+│   ├── lib/                      # Currency formatting, shipping threshold calculator, UUID, theme
 │   ├── mocks/                    # MSW fixtures and handlers (dev/unit test only)
 │   ├── pages/                    # Catalog, Product, Cart, Checkout, Orders, Order, Status, NotFound
 │   └── styles/                   # Tailwind v4 + CSS variable design tokens
