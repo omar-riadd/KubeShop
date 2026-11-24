@@ -84,14 +84,24 @@ func TestSessionOrClientKey_Resolution(t *testing.T) {
 		t.Fatalf("expected session:%s, got %s", sessID, got)
 	}
 
-	// 3. X-Forwarded-For with multiple IPs
-	reqXFF := httptest.NewRequest(http.MethodGet, "/", nil)
-	reqXFF.Header.Set("X-Forwarded-For", "203.0.113.195, 70.41.3.18, 150.172.238.178")
-	if got := sessionOrClientKey(reqXFF); got != "ip:203.0.113.195" {
+	// 3. X-Real-IP takes precedence over spoofed X-Forwarded-For and RemoteAddr
+	reqRealIP := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqRealIP.RemoteAddr = "10.0.0.1:12345"
+	reqRealIP.Header.Set("X-Real-IP", "203.0.113.195")
+	reqRealIP.Header.Set("X-Forwarded-For", "1.1.1.1, 2.2.2.2")
+	if got := sessionOrClientKey(reqRealIP); got != "ip:203.0.113.195" {
 		t.Fatalf("expected ip:203.0.113.195, got %s", got)
 	}
 
-	// 4. RemoteAddr fallback
+	// 4. Spoofed X-Forwarded-For without X-Real-IP is ignored and falls back to RemoteAddr
+	reqSpoofXFF := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqSpoofXFF.RemoteAddr = "198.51.100.1:45678"
+	reqSpoofXFF.Header.Set("X-Forwarded-For", "1.1.1.1, 2.2.2.2")
+	if got := sessionOrClientKey(reqSpoofXFF); got != "ip:198.51.100.1:45678" {
+		t.Fatalf("expected ip:198.51.100.1:45678, got %s", got)
+	}
+
+	// 5. RemoteAddr fallback
 	reqAddr := httptest.NewRequest(http.MethodGet, "/", nil)
 	reqAddr.RemoteAddr = "198.51.100.1:45678"
 	if got := sessionOrClientKey(reqAddr); got != "ip:198.51.100.1:45678" {

@@ -387,11 +387,8 @@ func sessionOrClientKey(r *http.Request) string {
 	if raw := strings.TrimSpace(r.Header.Get("X-Session-ID")); raw != "" && IsUUIDv4(raw) {
 		return "session:" + strings.ToLower(raw)
 	}
-	if xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); xff != "" {
-		if idx := strings.Index(xff, ","); idx != -1 {
-			return "ip:" + strings.TrimSpace(xff[:idx])
-		}
-		return "ip:" + xff
+	if realIP := strings.TrimSpace(r.Header.Get("X-Real-IP")); realIP != "" {
+		return "ip:" + realIP
 	}
 	return "ip:" + r.RemoteAddr
 }
