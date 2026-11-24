@@ -2,7 +2,7 @@
 
 This runbook documents the deterministic, reproducible steps to provision the KubeShop AWS EKS cluster and bootstrap Argo CD GitOps from scratch.
 
-> **Cost Warning**: Running `terraform apply` creates billable AWS resources (~$0.355/hr; see [docs/cost.md](../cost.md)). Always confirm approval before provisioning.
+> **Cost Warning**: Running `terraform apply` creates billable AWS resources (~$0.355/hr). Always confirm approval before provisioning.
 
 ---
 

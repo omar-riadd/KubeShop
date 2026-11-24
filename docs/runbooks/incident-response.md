@@ -1,6 +1,6 @@
 # Incident Response Runbook (`docs/runbooks/incident-response.md`)
 
-Standard on-call triage, diagnosis, mitigation, and postmortem workflow for KubeShop alerts. For a full end-to-end walkthrough and postmortem template, see [docs/incident-demo.md](../incident-demo.md).
+Standard on-call triage, diagnosis, mitigation, and postmortem workflow for KubeShop alerts.
 
 ---
 
@@ -49,4 +49,4 @@ Standard on-call triage, diagnosis, mitigation, and postmortem workflow for Kube
 ## 4. Mitigation & Closure
 1. **Mitigate First**: Prioritize restoring user-facing SLOs via [docs/runbooks/rollback.md](rollback.md) before deep debugging.
 2. **Verify Recovery**: Confirm 0% 5xx in Service RED, all Rollouts `Healthy`, and Slack alert `[RESOLVED]`.
-3. **Postmortem**: Within 48 hours of any Sev-1 or Sev-2 incident, complete a blameless postmortem using the template in [docs/incident-demo.md](../incident-demo.md#5-blameless-postmortem-template).
+3. **Postmortem**: Within 48 hours of any Sev-1 or Sev-2 incident, complete a blameless postmortem documenting timeline, root cause, and follow-up actions.
