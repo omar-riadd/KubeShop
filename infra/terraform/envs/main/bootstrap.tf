@@ -53,7 +53,7 @@ resource "helm_release" "argocd" {
 
   wait    = true
   atomic  = true
-  timeout = 600
+  timeout = 900
 
   values = [
     yamlencode({
