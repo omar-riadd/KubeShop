@@ -39,15 +39,7 @@ tf-plan:
 	cd infra/terraform/envs/main && terraform fmt -check -recursive && terraform validate && terraform plan
 
 cluster-down:
-	@echo "Step 1: Deleting Argo CD Applications so NLB, DNS records, and PVCs clean up cleanly..."
-	kubectl -n argocd delete applications --all --wait=true || true
-	@echo "Step 2: Waiting for LoadBalancer services to be removed..."
-	@for i in $$(seq 1 30); do \
-		lbs=$$(kubectl get svc -A -o jsonpath='{range .items[?(@.spec.type=="LoadBalancer")]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}'); \
-		if [ -z "$$lbs" ]; then echo "All LoadBalancers removed."; break; fi; \
-		echo "Waiting for LoadBalancers: $$lbs"; sleep 10; \
-	done
-	@echo "Step 3: Run 'cd infra/terraform/envs/main && terraform destroy' after verifying no orphaned ELBs remain."
+	@bash scripts/cluster-down.sh
 
 bootstrap:
 	@echo "Substituting repository placeholders..."

@@ -13,12 +13,13 @@ Run the scripted teardown helper from the repository root:
 make cluster-down
 ```
 
-What `make cluster-down` performs:
-1. Deletes all Argo CD `Application` resources (`kubectl -n argocd delete applications --all --wait=true`), triggering finalizers to remove:
-   - Envoy Gateway internet-facing AWS Network Load Balancer
-   - ExternalDNS Route 53 records (`dev`, `staging`, `app`)
-   - CloudNativePG, Prometheus, and Loki EBS `gp3` PVCs
-2. Polls all namespaces until zero `type=LoadBalancer` Services remain.
+What `make cluster-down` ([`scripts/cluster-down.sh`](../../scripts/cluster-down.sh)) performs (run as your normal user, **not** `sudo`):
+1. Detaches `kubeshop-root` (`--cascade=orphan`) so it cannot race or self-heal child apps.
+2. Deletes workload Applications (`kubeshop-workloads`, `baseline-*`, `catalog-*`, `cart-*`, `orders-*`, `web-*`) with bounded timeouts.
+3. Deletes `*-manifests` Applications first so Envoy Gateway `Gateway`/NLB and Route 53 records clean up before controllers are removed.
+4. Polls all namespaces until zero `type=LoadBalancer` Services remain.
+5. Deletes StatefulSet PVCs (`kubeshop-*`, `monitoring`, `observability`) and waits for EBS `PersistentVolume`s to drain while the EBS CSI driver is still running.
+6. Deletes platform addon Applications and `kubeshop-projects`, clearing any stuck Argo CD finalizers if CRDs were already removed.
 
 ---
 
