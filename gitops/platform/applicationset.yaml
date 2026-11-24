@@ -9,12 +9,12 @@ spec:
   generators:
     - list:
         elements:
-          # Wave 0: Core operators, CRDs, and monitoring
-          - name: cert-manager
-            namespace: cert-manager
-            repoURL: https://charts.jetstack.io
-            chart: cert-manager
-            version: v1.21.3
+          # Wave 0: Core operators, CRDs, Gateway API, and monitoring
+          - name: envoy-gateway
+            namespace: envoy-gateway-system
+            repoURL: docker.io/envoyproxy
+            chart: gateway-helm
+            version: v1.10.0
             wave: "0"
           - name: external-secrets
             namespace: external-secrets
@@ -52,12 +52,12 @@ spec:
             chart: kube-prometheus-stack
             version: 93.6.1
             wave: "0"
-          # Wave 1: Gateway (installs Gateway API CRDs once), DNS, Observability, FinOps
-          - name: envoy-gateway
-            namespace: envoy-gateway-system
-            repoURL: docker.io/envoyproxy
-            chart: gateway-helm
-            version: v1.10.0
+          # Wave 1: TLS (depends on Gateway API CRDs), DNS, Observability, FinOps
+          - name: cert-manager
+            namespace: cert-manager
+            repoURL: https://charts.jetstack.io
+            chart: cert-manager
+            version: v1.21.3
             wave: "1"
           - name: external-dns
             namespace: external-dns

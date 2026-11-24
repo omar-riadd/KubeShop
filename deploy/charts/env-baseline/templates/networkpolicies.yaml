@@ -115,10 +115,12 @@ spec:
           port: 5432
         - protocol: TCP
           port: 8000
-    # CloudNativePG instance manager communicates with the Kubernetes API server.
+    # CloudNativePG instance manager communicates with the Kubernetes API server (both pre-DNAT Service IP and post-DNAT VPC ENIs).
     - to:
         - ipBlock:
             cidr: {{ .Values.vpcCidr }}
+        - ipBlock:
+            cidr: 172.20.0.1/32
       ports:
         - protocol: TCP
           port: 443
