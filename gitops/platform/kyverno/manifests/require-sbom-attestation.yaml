@@ -25,7 +25,7 @@ spec:
   matchImageReferences:
     - glob: "ghcr.io/<GH_OWNER>/kubeshop-*"
   attestors:
-    - name: github-actions-oidc
+    - name: github_actions_oidc
       cosign:
         keyless:
           identities:
@@ -34,10 +34,10 @@ spec:
         ctlog:
           url: https://rekor.sigstore.dev
   attestations:
-    - name: cyclonedx-sbom
+    - name: cyclonedx_sbom
       intoto:
         type: https://cyclonedx.org/bom
   validations:
     - expression: >-
-        images.containers.map(image, verifyAttestations(image, [attestations.cyclonedx-sbom], [attestors.github-actions-oidc])).all(count, count > 0)
+        images.containers.map(image, verifyAttestationSignatures(image, attestations.cyclonedx_sbom, [attestors.github_actions_oidc])).all(count, count > 0)
       message: "KubeShop images should include a signed CycloneDX SBOM attestation."

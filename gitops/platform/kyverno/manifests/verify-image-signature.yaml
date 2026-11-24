@@ -25,7 +25,7 @@ spec:
   matchImageReferences:
     - glob: "ghcr.io/<GH_OWNER>/kubeshop-*"
   attestors:
-    - name: github-actions-oidc
+    - name: github_actions_oidc
       cosign:
         keyless:
           identities:
@@ -35,5 +35,5 @@ spec:
           url: https://rekor.sigstore.dev
   validations:
     - expression: >-
-        images.containers.map(image, verifyImageSignatures(image, [attestors.github-actions-oidc])).all(count, count > 0)
+        images.containers.map(image, verifyImageSignatures(image, [attestors.github_actions_oidc])).all(count, count > 0)
       message: "KubeShop images must carry a valid Cosign keyless signature from GitHub Actions on main."
