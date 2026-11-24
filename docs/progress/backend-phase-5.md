@@ -22,7 +22,7 @@ trivy config --severity HIGH,CRITICAL --exit-code 1 infra/terraform
 ```
 
 ## Live Verification Status
-- Live `terraform plan` was successfully executed and verified against AWS Account `<AWS_ACCOUNT_ID>` (Route 53 hosted zone `<HOSTED_ZONE_ID>` / `lab.internal.`):
+- Live `terraform plan` was successfully executed and verified against AWS Account `123456789012` (Route 53 hosted zone `Z00000000000000000000` / `lab.internal.`):
   - `bootstrap`: Plan generated 9 resources to add (S3 state bucket, KMS key & alias, bucket policies, public access blocks).
   - `envs/main`: Plan generated 111 resources to add, 0 to change, 0 to destroy.
 - `terraform apply` remains safely deferred until explicit user confirmation is requested.

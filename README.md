@@ -8,7 +8,7 @@
 [![Helm & GitOps](https://github.com/omar-riadd/KubeShop/actions/workflows/helm-gitops.yml/badge.svg)](https://github.com/omar-riadd/KubeShop/actions/workflows/helm-gitops.yml)
 [![Terraform](https://github.com/omar-riadd/KubeShop/actions/workflows/terraform.yml/badge.svg)](https://github.com/omar-riadd/KubeShop/actions/workflows/terraform.yml)
 
-Hosted on private GitHub repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)
+GitHub Repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)
 
 ---
 
@@ -261,4 +261,4 @@ See all 9 views (including mobile, product detail, cart, checkout, and order con
 ## 9. License & Ownership
 
 Maintained by **Omar Riadd** ([@omar-riadd](https://github.com/omar-riadd)).  
-Private Repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)
+Repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)
