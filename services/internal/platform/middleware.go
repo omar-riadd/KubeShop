@@ -399,4 +399,3 @@ func SessionRateLimitMiddleware(rps, burst int) func(http.Handler) http.Handler 
 	rl := NewSessionRateLimiter(rps, burst, 3*time.Minute)
 	return rl.Middleware()
 }
-

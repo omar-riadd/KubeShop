@@ -28,7 +28,7 @@ describe('session manager', () => {
     const expiredId = '0b7c1d0e-6f0a-4f43-9d52-2b7a7a2f9b11';
     sessionStorage.setItem(
       'kubeshop.sessionId',
-      JSON.stringify({ id: expiredId, expiresAt: Date.now() - 1000 }),
+      JSON.stringify({ id: expiredId, expiresAt: Date.now() - 1000 })
     );
     const fresh = getSessionId();
     expect(isUUIDv4(fresh)).toBe(true);

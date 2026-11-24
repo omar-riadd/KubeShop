@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, ArrowRight, CornerDownLeft, Sparkles, AlertCircle } from 'lucide-react';
 import { useProducts } from '../../api/catalog';
@@ -29,7 +29,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const isControlled = controlledOpen !== undefined;
   const isOpen = isControlled ? controlledOpen : searchCtx.isOpen;
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (isControlled) {
       controlledOnClose?.();
     } else {
@@ -37,7 +37,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     }
     setQuery('');
     setActiveIndex(0);
-  };
+  }, [isControlled, controlledOnClose, searchCtx]);
 
   const { data: productsData } = useProducts({ limit: 50 });
   const allProducts = useMemo(() => productsData?.items || [], [productsData]);
@@ -71,7 +71,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isControlled, controlledOnClose]);
+  }, [isOpen, isControlled, controlledOnClose, handleClose, searchCtx]);
 
   // Focus management
   useEffect(() => {
@@ -240,8 +240,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 <div
                   key={product.id}
                   role="option"
+                  tabIndex={-1}
                   aria-selected={isActive}
                   onClick={() => handleSelectProduct(product.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelectProduct(product.id);
+                    }
+                  }}
                   onMouseEnter={() => setActiveIndex(idx)}
                   className={`pt-1 first:pt-0 flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
                     isActive

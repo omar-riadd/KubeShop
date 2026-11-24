@@ -18,7 +18,10 @@ describe('uuid utility', () => {
       expect(isUUID(id)).toBe(true);
       expect(isUUIDv4(id)).toBe(true);
     } finally {
-      Object.defineProperty(crypto, 'randomUUID', { value: originalRandomUUID, configurable: true });
+      Object.defineProperty(crypto, 'randomUUID', {
+        value: originalRandomUUID,
+        configurable: true,
+      });
       getRandomValuesSpy.mockRestore();
     }
   });
