@@ -8,7 +8,8 @@
 [![Helm & GitOps](https://github.com/omar-riadd/KubeShop/actions/workflows/helm-gitops.yml/badge.svg)](https://github.com/omar-riadd/KubeShop/actions/workflows/helm-gitops.yml)
 [![Terraform](https://github.com/omar-riadd/KubeShop/actions/workflows/terraform.yml/badge.svg)](https://github.com/omar-riadd/KubeShop/actions/workflows/terraform.yml)
 
-GitHub Repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)
+GitHub Repository: [`https://github.com/omar-riadd/KubeShop.git`](https://github.com/omar-riadd/KubeShop.git)  
+[Architecture](#1-architecture-overview) · [Core Components](#2-core-components) · [Quickstart (Clone to Destroy)](#4-quickstart-from-clone-to-destroy) · [Environments](#5-environments--promotion) · [Documentation](#6-documentation--runbooks)
 
 ---
 
@@ -118,7 +119,6 @@ flowchart TD
 
 ```
 kubeshop/
-├── .agent/STATE.md                      # Persistent AI agent session state & decisions
 ├── .github/workflows/                   # CI/CD pipelines (Go services, Web, Security, Helm/GitOps, Terraform, Promotion)
 ├── api/
 │   ├── openapi.yaml                     # OpenAPI 3.1 single source of truth for all HTTP APIs
@@ -129,7 +129,6 @@ kubeshop/
 │   └── compose/gateway.nginx.conf       # Local Nginx reverse proxy standing in for Envoy Gateway
 ├── docs/
 │   ├── adr/                             # 8 Architecture Decision Records (ADRs 0001-0008)
-│   ├── progress/                        # Phase-by-phase completion summaries (Phases 0-10)
 │   ├── runbooks/                        # Operational runbooks (repo-setup, bootstrap, promotion, rollback, incident-response, teardown)
 │   ├── ui/                              # UI design system & accessibility notes
 │   ├── architecture.md                  # Deep-dive diagrams (runtime, CI/CD, GitOps, telemetry, security)
@@ -159,50 +158,153 @@ kubeshop/
 
 ---
 
-## 4. Local Quickstart
+## 4. Quickstart: From Clone to Destroy
 
-### Prerequisites
-- Docker & Docker Compose
-- Go ≥ 1.24
-- Node.js ≥ 22 & pnpm (via corepack)
-- Helm ≥ 3.17 & Terraform ≥ 1.11
+Run the entire KubeShop platform locally in minutes—from cloning the repository, through browsing the live storefront and testing microservices, to cleanly tearing down and destroying all resources.
 
-### Run Locally
+### Step 1: Clone the Repository
 
 ```bash
-# 1. Start the backend services (Redis, Postgres, Catalog :8081, Cart :8082, Orders :8083)
-make dev-backend
-
-# 2. Start the full stack with Web SPA and local Gateway (:8080)
-make up
-# Access the storefront at http://localhost:8080
-
-# 3. Stop all local containers and volumes
-make down
+git clone https://github.com/omar-riadd/KubeShop.git
+cd KubeShop
 ```
 
-> **Note:** When running `orders` outside Docker Compose, `DATABASE_URL` defaults to `sslmode=require` and refuses unencrypted connections; pass an explicit `DATABASE_URL` (as `docker-compose.yml` does) if your local PostgreSQL instance does not have TLS enabled.
+---
 
-### Run Tests & Linting
+### Step 2: Prerequisites
+
+To run the complete platform locally with Docker Compose, you only need:
+- **Docker** (v24+ with Compose v2+)
+- *(Optional)* **GNU Make** (standard on Linux/macOS; commands can also be run directly with `docker compose`)
+
+> [!NOTE]
+> You do **not** need Go, Node.js, or PostgreSQL installed on your host machine to run the platform. All microservices, databases, and frontend assets are containerized and orchestrated automatically.
+
+---
+
+### Step 3: Launch the Full Stack
+
+Start all microservices, persistent databases, migrations, and the storefront gateway with a single command:
 
 ```bash
-# Backend unit, integration, and OpenAPI contract tests
+make up
+```
+*(Or without `make`: `docker compose --profile full up -d --build`)*
+
+**What happens automatically:**
+1. Starts **PostgreSQL 17** (`postgres`) and **Redis 7** (`redis`) with automated health checks.
+2. Runs the database migration job (`orders-migrate`), creating all required schemas and indexes.
+3. Builds and boots the three Go microservices: **Catalog** (`:8081`), **Cart** (`:8082`), and **Orders** (`:8083`).
+4. Builds and serves the **Web Storefront** (React 19 SPA running in hardened unprivileged Nginx).
+5. Launches the **Local Gateway** (reverse proxy mirroring Envoy Gateway rules) routing traffic on port `8080`.
+
+> [!TIP]
+> **Port Conflict?** If port `8080` is occupied on your host, simply override the gateway port:
+> ```bash
+> GATEWAY_PORT=8090 make up
+> ```
+
+---
+
+### Step 4: Explore the Platform
+
+Open your browser and explore the platform:
+
+| Application / Service | URL | What to Test |
+|---|---|---|
+| **KubeShop Storefront** | [`http://localhost:8080`](http://localhost:8080) | Browse engineering desk gear, press `Cmd+K` or `Ctrl+K` to search, use the slide-out Cart Drawer, and complete a test checkout. |
+| **Platform Status & Rollout Monitor** | [`http://localhost:8080/status`](http://localhost:8080/status) | Inspect real-time Canary rollout metrics, microservice latency, active pod versions, and run a live synthetic traffic probe. |
+| **Catalog API** | [`http://localhost:8081/api/catalog/products`](http://localhost:8081/api/catalog/products) | Direct Go catalog service endpoint returning the 12 seeded developer gear items. |
+| **Cart Health & Version** | [`http://localhost:8082/version`](http://localhost:8082/version) | Direct cart microservice health check and build metadata. |
+| **Orders Health & Version** | [`http://localhost:8083/version`](http://localhost:8083/version) | Direct orders microservice health check and build metadata. |
+
+To view real-time streaming logs from all services:
+```bash
+make logs
+# Or: docker compose --profile full logs -f
+```
+
+---
+
+### Step 5: Verify the System (Optional)
+
+Run automated smoke checks to verify end-to-end communication across the Gateway, Catalog, Redis Cart, and Postgres Orders:
+
+```bash
+# 1. Quick API curl check
+curl -s http://localhost:8080/api/catalog/products | grep "Keyboard"
+
+# 2. Automated k6 end-to-end integration test (28 checks covering catalog, cart, checkout, idempotency)
+make load-test
+# (If using custom port: BASE_URL=http://localhost:8090 k6 run tests/load/smoke.js)
+```
+
+---
+
+### Step 6: Stop and Destroy the Services
+
+When you are finished testing, cleanly stop all containers and destroy all persistent volumes and networks:
+
+```bash
+make down
+```
+*(Or without `make`: `docker compose --profile full --profile backend down -v --remove-orphans`)*
+
+**What this cleans up:**
+- Gracefully stops and terminates all 7 running containers (`gateway`, `web`, `orders`, `cart`, `catalog`, `postgres`, `redis`).
+- Deletes the Docker bridge networks.
+- Deletes the local PostgreSQL database and Redis persistent data volumes (`-v`).
+- Leaves zero orphaned containers or disk artifacts on your machine.
+
+---
+
+### Advanced: Alternative Workflows
+
+<details>
+<summary><b>1. Backend-Only Development (Go Services & DBs)</b></summary>
+
+If you only want to develop backend Go services without building the web frontend:
+```bash
+# Start Postgres, Redis, migrations, Catalog (:8081), Cart (:8082), Orders (:8083)
+make dev-backend
+
+# Run backend unit, integration, and contract tests
 make test
 
-# k6 end-to-end smoke test (against running 'make up' stack)
-make load-test
+# Destroy backend services and volumes
+make down
+```
+</details>
 
-# Frontend unit & component tests (Vitest + RTL + MSW; 36/36 passing)
+<details>
+<summary><b>2. Frontend-Only Development (React 19 with Mock Service Worker)</b></summary>
+
+If you want to work on the UI without running Docker or backend services:
+```bash
+cd web
+pnpm install
+pnpm dev
+# Storefront opens at http://localhost:5173 with full in-browser MSW mock APIs
+```
+</details>
+
+<details>
+<summary><b>3. Running Full Test Suites & Linters</b></summary>
+
+```bash
+# Backend unit & race tests (coverage >84%)
+make test
+
+# Frontend unit & component tests (53/53 Vitest tests passing)
 pnpm --dir web test --run
 
 # Frontend production build & typecheck
 pnpm --dir web build
 
-# Helm charts linting
-helm lint deploy/charts/app
-helm lint deploy/charts/env-baseline
+# End-to-end Playwright tests (with local stack running on port 8080 or 8090)
+BASE_URL=http://localhost:8080 pnpm --dir web test:e2e
 
-# Kyverno CEL policy tests (10/10)
+# Kyverno CEL admission policy tests (10/10 passing)
 kyverno test gitops/platform/kyverno/tests
 
 # Terraform validation and formatting
@@ -210,6 +312,27 @@ terraform fmt -check -recursive infra/terraform
 terraform -chdir=infra/terraform/bootstrap validate
 terraform -chdir=infra/terraform/envs/main validate
 ```
+</details>
+
+<details>
+<summary><b>4. Cloud Deployment & Complete Teardown (AWS EKS & GitOps)</b></summary>
+
+If deploying to real AWS infrastructure:
+1. **Bootstrap & Deploy**: Follow the [Repository Setup Runbook](docs/runbooks/repo-setup.md) and [Cluster Bootstrap Runbook](docs/runbooks/bootstrap.md).
+2. **Cloud Teardown & Resource Destruction**: To prevent any ongoing AWS cloud spend, follow the ordered teardown process in the [Cluster Teardown Runbook](docs/runbooks/teardown.md):
+   ```bash
+   # 1. Clean up Argo CD applications and AWS Network Load Balancers
+   make cluster-down
+
+   # 2. Destroy the main EKS cluster stack
+   cd infra/terraform/envs/main
+   terraform destroy
+
+   # 3. Destroy the S3 remote state bootstrap bucket
+   cd ../../bootstrap
+   terraform destroy
+   ```
+</details>
 
 ---
 
