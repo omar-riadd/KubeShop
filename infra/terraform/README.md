@@ -9,7 +9,7 @@ Provisions the AWS foundation for KubeShop (single Amazon EKS cluster in `eu-cen
   - `network/` — 3-AZ VPC, public + private subnets, single NAT Gateway (cost-optimized), EKS Load Balancer subnet tags.
   - `eks/` — EKS cluster with KMS envelope encryption, Access Entries (`API` mode, no `aws-auth` ConfigMap), IRSA OIDC provider, `api`/`audit` control-plane logs, `vpc-cni` (with NetworkPolicy enabled), `coredns`, `kube-proxy`, `metrics-server`, plus `spot` (general/non-prod) and `ondemand` (`workload=prod` tainted) node groups with configurable `spot_instance_types` and `ondemand_instance_types` (supports AWS Free Tier overrides via `terraform.tfvars`).
   - `iam-irsa/` — Least-privilege IRSA roles (`kubeshop-<addon>`) for AWS Load Balancer Controller, ExternalDNS, cert-manager, External Secrets Operator, and EBS CSI Driver.
-  - `secrets/` — KMS-encrypted AWS Secrets Manager entries (`kubeshop/<env>/redis`, `kubeshop/platform/slack-webhook`, `kubeshop/platform/grafana-admin`).
+  - `secrets/` — KMS-encrypted AWS Secrets Manager entries (`kubeshop/<env>/redis`, `kubeshop/<env>/orders-admin`, `kubeshop/platform/slack-webhook`, `kubeshop/platform/grafana-admin`).
   - `github-oidc/` — GitHub Actions OIDC provider and `kubeshop-terraform-plan` (read-only + lockfile) / `kubeshop-terraform-apply` (restricted to protected `aws-prod-apply` environment) roles.
   - `budget/` — Monthly AWS Budgets cost alerts at 50%, 80%, and 100%.
 - `envs/main/` — Root stack wiring all modules plus Helm bootstrap releases for `aws-load-balancer-controller`, `argo-cd`, and `argocd-apps` (root Application pointing at `gitops/bootstrap`).
@@ -53,7 +53,7 @@ trivy config --severity HIGH,CRITICAL infra/terraform
 
 Always delete Kubernetes-managed load balancers, DNS records, and EBS volumes **before** running `terraform destroy`, otherwise VPC/subnet deletion will hang on orphaned ENIs and NLBs:
 
-1. Run `make cluster-down` (deletes all Argo CD Applications and waits until all `LoadBalancer` Services are removed).
+1. Run `make cluster-down` as your normal user (not `sudo`) — detaches `kubeshop-root`, deletes workloads/manifests before operators, drains StatefulSet PVCs/EBS volumes, and waits until all `LoadBalancer` Services are removed.
 2. Verify no orphaned NLBs or EBS volumes remain in AWS EC2/ELB consoles.
 3. Destroy the main stack:
    ```bash

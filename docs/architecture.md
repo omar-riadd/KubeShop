@@ -100,9 +100,10 @@ flowchart TD
     ArgoProd --> ProdRollout["Backend Canary (Auto) / Web BlueGreen (Manual Promote)"]
 ```
 
-### Sync Waves (`gitops/platform/applicationset.yaml`)
-- **Wave 0 (CRDs & Operators)**: `cert-manager`, `external-secrets`, `kyverno`, `argo-rollouts`, `cloudnative-pg`, `keda`, `kube-prometheus-stack`.
-- **Wave 1 (Data Plane & Telemetry)**: `envoy-gateway` (installs Gateway API CRDs once), `external-dns`, `loki`, `tempo`, `alloy`, `otel-collector`, `opencost`.
+### Sync Waves (`gitops/bootstrap/bootstrap.yaml` & `gitops/platform/applicationset.yaml`)
+- **Bootstrap (`Wave -3`)**: Encrypted `gp3` `StorageClass` (`ebs.csi.aws.com`, cluster default).
+- **Wave 0 (CRDs, Gateway API & Core Operators)**: `envoy-gateway` (installs Gateway API CRDs), `external-secrets`, `kyverno`, `argo-rollouts`, `cloudnative-pg`, `keda`, `kube-prometheus-stack`.
+- **Wave 1 (TLS, DNS & Telemetry)**: `cert-manager`, `external-dns`, `loki`, `tempo`, `alloy`, `otel-collector`, `opencost`.
 - **Wave 2 (Cluster Manifests)**: `ClusterIssuer`, `GatewayClass` + `EnvoyProxy`, `Gateway`, `ClusterSecretStore`, Kyverno CEL policies, PrometheusRules, Grafana dashboards, `ClusterAnalysisTemplate`s.
 
 ---

@@ -81,7 +81,7 @@ flowchart TD
   - **Frequently Bought Together Bundles**: Recommended gear bundles with automatic 10% bundle savings.
 - **Platform Status Dashboard (`/status`)**: Live canary rollout observer measuring service health, response latency, active pod names, and real-time version traffic distributions.
 - **Hardened Nginx**: Runs as unprivileged user `101`, `readOnlyRootFilesystem: true`, dynamic runtime configuration via `/tmp/runtime-config.json`, DRY modular security headers (`include /etc/nginx/security_headers.conf`), and strict Content Security Policy (`script-src 'self'`).
-- **Comprehensive Test Harness**: 53 Vitest unit & component tests across 15 test suites and 15 Playwright E2E & WCAG 2.1 AA accessibility suites.
+- **Comprehensive Test Harness**: 55 Vitest unit & component tests across 15 test suites and 15 Playwright E2E & WCAG 2.1 AA accessibility suites.
 
 ### Infrastructure as Code (`infra/terraform/`)
 - **`bootstrap/`**: Versioned, KMS-encrypted S3 remote state bucket with native S3 locking (`use_lockfile = true`, Terraform >= 1.11; no DynamoDB table needed).
@@ -89,17 +89,17 @@ flowchart TD
   - `network`: 3-AZ VPC, public + private subnets, single NAT Gateway, EKS ELB/NLB discovery tags.
   - `eks`: Amazon EKS 1.35, KMS envelope encryption, `API` Access Entries, IRSA OIDC, spot & on-demand node groups.
   - `iam-irsa`: Least-privilege IRSA roles for AWS Load Balancer Controller, ExternalDNS, cert-manager, External Secrets Operator, and EBS CSI.
-  - `secrets`: KMS-encrypted AWS Secrets Manager entries (`redis`, `slack-webhook`, `grafana-admin`).
+  - `secrets`: KMS-encrypted AWS Secrets Manager entries (`redis`, `orders-admin`, `slack-webhook`, `grafana-admin`).
   - `github-oidc`: GitHub Actions OIDC provider + read-only plan role and least-privilege protected apply IAM role.
   - `budget`: Monthly AWS Budgets alerts at 50%, 80%, and 100% thresholds.
 - **`envs/main/`**: Wires all modules and bootstraps AWS Load Balancer Controller, Argo CD (with progressive syncs and private repo credentials secret), and root GitOps Application.
 
 ### GitOps & Progressive Delivery (`deploy/`, `gitops/`)
 - **Shared Helm Chart (`deploy/charts/app`)**: Single chart rendering all 4 workloads (`catalog`, `cart`, `orders`, `web`) with `values.schema.json` enforcement, Argo Rollouts (canary for APIs, blueGreen for web), HTTPRoutes, ServiceMonitors, and NetworkPolicies.
-- **Environment Baseline Chart (`deploy/charts/env-baseline`)**: Per-environment namespace quotas, default-deny NetworkPolicies, Redis StatefulSet with conditional PVC persistence (`gp3`, RDB `--save 60 1`) and PodDisruptionBudget, CloudNativePG cluster, and synthetic traffic generator (`k6`).
+- **Environment Baseline Chart (`deploy/charts/env-baseline`)**: Per-environment namespace quotas, default-deny NetworkPolicies, ExternalSecrets (`cart-redis`, `orders-admin`), Redis StatefulSet with conditional PVC persistence (`gp3`, RDB `--save 60 1`) and PodDisruptionBudget, CloudNativePG cluster, and synthetic traffic generator (`k6`).
 - **Argo CD GitOps**:
-  - `gitops/bootstrap/`: Root bootstrap Application.
-  - `gitops/platform/`: `RollingSync` ApplicationSet deploying 14 platform addons in progressive sync waves (cert-manager, external-secrets, kyverno, argo-rollouts, cloudnative-pg, keda, kube-prometheus-stack, envoy-gateway, external-dns, loki, tempo, alloy, otel-collector, opencost) + Wave 2 manifests.
+  - `gitops/bootstrap/`: Encrypted `gp3` `StorageClass` (Wave `-3`), AppProject, and root bootstrap Applications.
+  - `gitops/platform/`: `RollingSync` ApplicationSet deploying 14 platform addons in progressive sync waves (Wave 0: envoy-gateway, external-secrets, kyverno, argo-rollouts, cloudnative-pg, keda, kube-prometheus-stack; Wave 1: cert-manager, external-dns, loki, tempo, alloy, otel-collector, opencost) + Wave 2 manifests.
   - `gitops/apps/`: Matrix ApplicationSets for `dev`, `staging`, and `prod`.
 
 ### Observability & SLOs
@@ -146,7 +146,8 @@ kubeshop/
 │   ├── modules/                         # 6 AWS modules (network, eks, iam-irsa, secrets, github-oidc, budget)
 │   └── envs/main/                       # Main cluster stack + Helm bootstrap
 ├── scripts/
-│   └── bootstrap-placeholders.sh        # Automated placeholder substitution (--dry-run, --check)
+│   ├── bootstrap-placeholders.sh        # Automated placeholder substitution (--dry-run, --check)
+│   └── cluster-down.sh                  # Ordered Argo CD, LoadBalancer, and PVC teardown helper
 ├── services/                            # Go microservices monorepo (catalog, cart, orders, platform)
 ├── tests/load/                          # k6 load testing scripts (smoke, load, stress)
 ├── web/                                 # React 19 storefront SPA (lazy-loaded routes) + Playwright E2E suite
@@ -296,7 +297,7 @@ pnpm dev
 # Backend unit & race tests (coverage >84%)
 make test
 
-# Frontend unit & component tests (53/53 Vitest tests passing)
+# Frontend unit & component tests (55/55 Vitest tests passing)
 pnpm --dir web test --run
 
 # Frontend production build & typecheck
@@ -320,18 +321,16 @@ terraform -chdir=infra/terraform/envs/main validate
 
 If deploying to real AWS infrastructure:
 1. **Bootstrap & Deploy**: Follow the [Repository Setup Runbook](docs/runbooks/repo-setup.md) and [Cluster Bootstrap Runbook](docs/runbooks/bootstrap.md).
-2. **Cloud Teardown & Resource Destruction**: To prevent any ongoing AWS cloud spend, follow the ordered teardown process in the [Cluster Teardown Runbook](docs/runbooks/teardown.md):
+2. **Cloud Teardown & Resource Destruction**: To prevent any ongoing AWS cloud spend, follow the ordered teardown process in the [Cluster Teardown Runbook](docs/runbooks/teardown.md) (run as your normal user, **not** `sudo`):
    ```bash
-   # 1. Clean up Argo CD applications and AWS Network Load Balancers
+   # 1. Clean up Argo CD applications, AWS Network Load Balancers, and StatefulSet PVCs
    make cluster-down
 
    # 2. Destroy the main EKS cluster stack
-   cd infra/terraform/envs/main
-   terraform destroy
+   terraform -chdir=infra/terraform/envs/main destroy
 
-   # 3. Destroy the S3 remote state bootstrap bucket
-   cd ../../bootstrap
-   terraform destroy
+   # 3. Optional: Destroy the S3 remote state bootstrap bucket
+   terraform -chdir=infra/terraform/bootstrap destroy
    ```
 </details>
 

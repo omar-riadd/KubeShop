@@ -81,10 +81,11 @@ Record the output `state_bucket_arn` for Step 2.
    kubectl get applications -n argocd
    ```
    Expected progression:
-   - **Wave 0**: `cert-manager`, `external-secrets`, `kyverno`, `argo-rollouts`, `cloudnative-pg`, `keda`, `kube-prometheus-stack` → `Synced / Healthy`
-   - **Wave 1**: `envoy-gateway`, `external-dns`, `loki`, `tempo`, `alloy`, `otel-collector`, `opencost` → `Synced / Healthy`
-   - **Wave 2**: `platform-manifests` (`ClusterIssuer`, `Gateway`, `ClusterSecretStore`, Kyverno policies, SLO rules, dashboards) → `Synced / Healthy`
-   - **Apps**: `baseline-{dev,staging,prod}` and `{web,catalog,cart,orders}-{dev,staging,prod}` → `Synced / Healthy`
+   - **Bootstrap (`Wave -3`)**: Encrypted `gp3` `StorageClass` (`ebs.csi.aws.com`, default)
+   - **Wave 0**: `envoy-gateway` (installs Gateway API CRDs), `external-secrets`, `kyverno`, `argo-rollouts`, `cloudnative-pg`, `keda`, `kube-prometheus-stack` → `Synced / Healthy`
+   - **Wave 1**: `cert-manager`, `external-dns`, `loki`, `tempo`, `alloy`, `otel-collector`, `opencost` → `Synced / Healthy`
+   - **Wave 2**: `platform-manifests` (`ClusterIssuer`, `Gateway`, `ClusterSecretStore`, Kyverno CEL policies, SLO rules, dashboards) → `Synced / Healthy`
+   - **Apps**: `baseline-{dev,staging,prod}` (including `cart-redis` & `orders-admin` ExternalSecrets) and `{web,catalog,cart,orders}-{dev,staging,prod}` → `Synced / Healthy`
 
 ---
 
