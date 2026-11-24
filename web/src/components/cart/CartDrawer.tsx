@@ -8,8 +8,7 @@ import { Button } from '../ui/Button';
 import { IconButton } from '../ui/IconButton';
 import { QuantityStepper } from '../ui/QuantityStepper';
 import { formatMoney } from '../../lib/money';
-
-const FREE_SHIPPING_THRESHOLD_CENTS = 10000; // $100.00 USD
+import { calculateFreeShippingProgress } from '../../lib/shipping';
 
 export const CartDrawer: React.FC = () => {
   const { isOpen, closeDrawer } = useCartDrawer();
@@ -54,12 +53,11 @@ export const CartDrawer: React.FC = () => {
 
   const subtotalCents = cart?.subtotalCents || 0;
   const currency = cart?.currency || 'USD';
-  const hasFreeShipping = subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS;
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD_CENTS - subtotalCents);
-  const freeShippingProgress = Math.min(
-    100,
-    Math.round((subtotalCents / FREE_SHIPPING_THRESHOLD_CENTS) * 100)
-  );
+  const {
+    hasFreeShipping,
+    remainingCents: remainingForFreeShipping,
+    progressPercent: freeShippingProgress,
+  } = calculateFreeShippingProgress(subtotalCents, currency);
 
   const handleCheckout = () => {
     closeDrawer();

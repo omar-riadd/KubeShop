@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Sun, Moon, Laptop, Menu, X, Terminal } from 'lucide-react';
+import { ShoppingCart, Sun, Moon, Laptop, Menu, X, Terminal, Search } from 'lucide-react';
 import { useCart } from '../../api/cart';
 import { useCartDrawer } from '../../context/CartDrawerContext';
+import { useSearch } from '../../context/SearchContext';
 import { useRuntimeConfig } from '../../api/runtimeConfig';
 import { getStoredTheme, setTheme, type Theme } from '../../lib/theme';
 import { Badge } from '../ui/Badge';
@@ -11,6 +12,7 @@ import { IconButton } from '../ui/IconButton';
 export const Header: React.FC = () => {
   const { data: cart } = useCart();
   const { openDrawer } = useCartDrawer();
+  const { openSearch } = useSearch();
   const { data: runtimeConfig } = useRuntimeConfig();
   const [currentTheme, setCurrentTheme] = useState<Theme>(getStoredTheme());
   const [menuOpen, setMenuOpen] = useState(false);
@@ -82,6 +84,21 @@ export const Header: React.FC = () => {
 
         {/* Right tools */}
         <div className="flex items-center gap-3">
+          {/* Quick Search Button */}
+          <button
+            type="button"
+            onClick={openSearch}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm bg-surface-muted/60 hover:bg-border/30 border border-border text-xs text-text-muted hover:text-text transition-colors cursor-pointer"
+            data-testid="header-search-button"
+            aria-label="Search hardware (Press Cmd+K or /)"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Search</span>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-mono font-semibold px-1 py-0.2 bg-surface rounded border border-border">
+              ⌘K
+            </kbd>
+          </button>
+
           {showEnvBadge && (
             <Badge
               variant={envVariants[env] || 'default'}

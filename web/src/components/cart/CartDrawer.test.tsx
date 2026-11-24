@@ -26,16 +26,16 @@ describe('CartDrawer', () => {
           sessionId: 'test-session',
           items: [
             {
-              productId: 'kb-001',
-              name: 'Nimbus 75 Mechanical Keyboard',
-              priceCents: 8900,
+              productId: 'ac-003',
+              name: 'Namespace Monitor Light Bar',
+              priceCents: 4900,
               currency: 'USD',
               quantity: 1,
-              imageUrl: '/images/products/kb-001.svg',
+              imageUrl: '/images/products/ac-003.svg',
             },
           ],
           itemCount: 1,
-          subtotalCents: 8900,
+          subtotalCents: 4900,
           currency: 'USD',
         })
       )
@@ -46,7 +46,7 @@ describe('CartDrawer', () => {
     expect(
       await screen.findByRole('dialog', { name: /shopping cart drawer/i })
     ).toBeInTheDocument();
-    expect(await screen.findByText('Nimbus 75 Mechanical Keyboard')).toBeInTheDocument();
+    expect(await screen.findByText('Namespace Monitor Light Bar')).toBeInTheDocument();
     expect(screen.getByText(/Free SRE Dispatch/i)).toBeInTheDocument();
     expect(screen.getByTestId('drawer-checkout-button')).toBeInTheDocument();
   });

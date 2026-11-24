@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ToastProvider } from '../components/ui/Toast';
 import { CartDrawerProvider } from '../context/CartDrawerContext';
+import { SearchProvider } from '../context/SearchContext';
 
 interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string;
@@ -38,7 +39,9 @@ export function renderWithProviders(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <CartDrawerProvider>
-          <MemoryRouter initialEntries={[route]}>{content}</MemoryRouter>
+          <SearchProvider>
+            <MemoryRouter initialEntries={[route]}>{content}</MemoryRouter>
+          </SearchProvider>
         </CartDrawerProvider>
       </ToastProvider>
     </QueryClientProvider>,

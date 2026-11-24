@@ -47,4 +47,26 @@ test.describe('Catalog Page & Product Exploration', () => {
     await expect(page.getByTestId('product-title')).toBeVisible();
     await expect(page.getByRole('button', { name: /add to cart/i }).first()).toBeVisible();
   });
+
+  test('opens command palette with hotkey, searches, and navigates', async ({ page }) => {
+    await page.goto('/');
+
+    // Open via header search button
+    const searchTrigger = page.getByTestId('header-search-button');
+    await expect(searchTrigger).toBeVisible();
+    await searchTrigger.click();
+
+    const dialog = page.getByRole('dialog', { name: /product search command palette/i });
+    await expect(dialog).toBeVisible();
+
+    const input = page.getByTestId('command-palette-input');
+    await input.fill('Nimbus');
+
+    const result = page.getByTestId('search-result-kb-001');
+    await expect(result).toBeVisible();
+
+    await result.click();
+    await expect(page).toHaveURL(/\/products\/kb-001/);
+    await expect(dialog).not.toBeVisible();
+  });
 });

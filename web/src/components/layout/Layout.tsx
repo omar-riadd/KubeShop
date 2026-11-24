@@ -7,6 +7,8 @@ import { ToastProvider } from '../ui/Toast';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { CartDrawerProvider } from '../../context/CartDrawerContext';
 import { CartDrawer } from '../cart/CartDrawer';
+import { SearchProvider } from '../../context/SearchContext';
+import { CommandPalette } from '../search/CommandPalette';
 
 export const Layout: React.FC = () => {
   const [isOnline, setIsOnline] = useState(
@@ -63,39 +65,44 @@ export const Layout: React.FC = () => {
   return (
     <ToastProvider>
       <CartDrawerProvider>
-        <div className="min-h-screen flex flex-col bg-bg text-text">
-          {/* Skip Link */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-contrast focus:rounded-sm focus:shadow-lg focus:outline-2 focus:outline-primary-contrast font-medium text-sm"
-          >
-            Skip to content
-          </a>
-
-          {/* Offline Banner */}
-          {!isOnline && (
-            <div
-              role="alert"
-              className="bg-warning text-black px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-2"
+        <SearchProvider>
+          <div className="min-h-screen flex flex-col bg-bg text-text">
+            {/* Skip Link */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-contrast focus:rounded-sm focus:shadow-lg focus:outline-2 focus:outline-primary-contrast font-medium text-sm"
             >
-              <WifiOff className="w-4 h-4" />
-              <span>You are currently offline. Some features may not be available.</span>
-            </div>
-          )}
+              Skip to content
+            </a>
 
-          <Header />
+            {/* Offline Banner */}
+            {!isOnline && (
+              <div
+                role="alert"
+                className="bg-warning text-black px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-2"
+              >
+                <WifiOff className="w-4 h-4" />
+                <span>You are currently offline. Some features may not be available.</span>
+              </div>
+            )}
 
-          <main id="main-content" className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
-            <Suspense fallback={<LoadingSpinner />}>
-              <Outlet />
-            </Suspense>
-          </main>
+            <Header />
 
-          <Footer />
+            <main id="main-content" className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+              <Suspense fallback={<LoadingSpinner />}>
+                <Outlet />
+              </Suspense>
+            </main>
 
-          {/* Slide-out Cart Drawer */}
-          <CartDrawer />
-        </div>
+            <Footer />
+
+            {/* Slide-out Cart Drawer */}
+            <CartDrawer />
+
+            {/* Global Command Palette Quick Search */}
+            <CommandPalette />
+          </div>
+        </SearchProvider>
       </CartDrawerProvider>
     </ToastProvider>
   );
