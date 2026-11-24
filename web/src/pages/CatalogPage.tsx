@@ -88,13 +88,28 @@ export const CatalogPage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Hero header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-extrabold tracking-tight text-text">
+      <div className="space-y-3">
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface text-text border border-border shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          PRODUCTION-GRADE HARDWARE
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
           Gear for engineers who ship.
         </h1>
         <p className="text-text-muted text-sm max-w-xl">
           High-performance keyboards, precision mice, and desk gear tuned for production.
         </p>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-text-muted pt-1">
+          <span className="flex items-center gap-1 font-semibold text-text">
+            <span className="text-amber-400">★★★★★</span> 4.9/5 SRE rating
+          </span>
+          <span className="text-border">•</span>
+          <span>⚡ Sub-millisecond latency</span>
+          <span className="text-border">•</span>
+          <span>📦 Free Worldwide Dispatch</span>
+          <span className="text-border">•</span>
+          <span>🛡️ 2-Year Direct Warranty</span>
+        </div>
       </div>
 
       {/* Filter / Search Bar */}
@@ -188,12 +203,12 @@ export const CatalogPage: React.FC = () => {
             <Card
               key={prod.id}
               data-testid={`product-card-${prod.id}`}
-              className="flex flex-col justify-between group hover:border-primary/50 transition-colors"
+              className="flex flex-col justify-between group hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
             >
               <div>
                 <Link
                   to={`/products/${prod.id}`}
-                  className="block overflow-hidden rounded-md focus-visible:outline-offset-2"
+                  className="block relative overflow-hidden rounded-md focus-visible:outline-offset-2"
                 >
                   <img
                     src={prod.imageUrl}
@@ -204,12 +219,21 @@ export const CatalogPage: React.FC = () => {
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = '/images/placeholder.svg';
                     }}
-                    className="w-full h-48 object-cover bg-surface rounded-md transition-transform duration-200 group-hover:scale-102"
+                    className="w-full h-48 object-cover bg-surface rounded-md transition-transform duration-300 group-hover:scale-105"
                   />
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/90 text-[10px] font-semibold text-emerald-300 border border-emerald-500/30 shadow-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    In Stock
+                  </div>
                   <div className="mt-3">
-                    <Badge variant="default" className="capitalize text-[11px] mb-1.5">
-                      {prod.category}
-                    </Badge>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Badge variant="default" className="capitalize text-[11px]">
+                        {prod.category}
+                      </Badge>
+                      <span className="text-[11px] font-medium text-text-muted flex items-center gap-1">
+                        <span className="text-amber-400">★</span> 4.9
+                      </span>
+                    </div>
                     <h2 className="text-base font-semibold text-text group-hover:text-primary transition-colors line-clamp-1">
                       {prod.name}
                     </h2>

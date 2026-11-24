@@ -86,7 +86,11 @@ export const ProductPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {/* Product image */}
-        <div className="bg-surface border border-border rounded-md overflow-hidden p-6 flex items-center justify-center">
+        <div className="relative bg-surface border border-border rounded-lg overflow-hidden p-6 sm:p-8 flex items-center justify-center shadow-xs">
+          <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/90 text-[11px] font-semibold text-emerald-300 border border-emerald-500/30 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            In Stock &amp; Ready to Ship
+          </div>
           <img
             src={product.imageUrl}
             alt={product.name}
@@ -102,9 +106,14 @@ export const ProductPage: React.FC = () => {
         {/* Product details */}
         <div className="space-y-6">
           <div>
-            <Badge variant="default" className="capitalize text-xs mb-2">
-              {product.category}
-            </Badge>
+            <div className="flex items-center gap-3 mb-2">
+              <Badge variant="default" className="capitalize text-xs">
+                {product.category}
+              </Badge>
+              <span className="text-xs font-semibold text-text flex items-center gap-1">
+                <span className="text-amber-400">★★★★★</span> 4.9 · 142 reviews
+              </span>
+            </div>
             <h1 data-testid="product-title" className="text-2xl sm:text-3xl font-bold text-text">
               {product.name}
             </h1>
@@ -117,9 +126,24 @@ export const ProductPage: React.FC = () => {
             </div>
           </div>
 
-          <p className="text-sm text-text-muted leading-relaxed border-t border-b border-border py-4">
+          <p className="text-sm text-text-muted leading-relaxed border-t border-border pt-4">
             {product.description}
           </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 py-3 border-t border-b border-border text-xs text-text-muted">
+            <div className="flex items-center gap-1.5">
+              <span>🛡️</span>
+              <span className="font-medium">2-Year Warranty</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span>⚡</span>
+              <span className="font-medium">Sub-ms Latency</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span>📦</span>
+              <span className="font-medium">Free Global Dispatch</span>
+            </div>
+          </div>
 
           <div className="space-y-4">
             <div className="flex items-center gap-4">

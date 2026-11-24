@@ -1,21 +1,162 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bg-kb-002" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
+      <stop offset="0%" stop-color="#082f49" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Knob Gradient -->
+    <radialGradient id="knob-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="60%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </radialGradient>
+
+    <!-- Spacebar Accent Gradients -->
+    <linearGradient id="spacebar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <linearGradient id="spacebar-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Light Bar Beam Gradient -->
+    <linearGradient id="lightbar-beam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#06b6d4" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <rect width="400" height="300" rx="12" fill="url(#bg-kb-002)" />
-  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+
+  <!-- Deep Slate Outer Chassis Canvas -->
+  <rect width="400" height="300" rx="14" fill="url(#bg-kb-002)" />
+  <rect x="1.5" y="1.5" width="397" height="297" rx="12.5" fill="none" stroke="#334155" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Subtle Blueprint Tech Grid Pattern -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="0.8">
+    <line x1="40" y1="0" x2="40" y2="300"/>
+    <line x1="80" y1="0" x2="80" y2="300"/>
+    <line x1="120" y1="0" x2="120" y2="300"/>
+    <line x1="160" y1="0" x2="160" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="300"/>
+    <line x1="240" y1="0" x2="240" y2="300"/>
+    <line x1="280" y1="0" x2="280" y2="300"/>
+    <line x1="320" y1="0" x2="320" y2="300"/>
+    <line x1="360" y1="0" x2="360" y2="300"/>
+    <line x1="0" y1="60" x2="400" y2="60"/>
+    <line x1="0" y1="120" x2="400" y2="120"/>
+    <line x1="0" y1="180" x2="400" y2="180"/>
+    <line x1="0" y1="240" x2="400" y2="240"/>
+  </g>
+
+  <!-- Top Status Bar: Category & Spec Tag -->
+  <rect x="20" y="18" width="80" height="20" rx="4" fill="#06b6d4" fill-opacity="0.2" stroke="#06b6d4" stroke-width="1"/>
+  <text x="60" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" fill="#38bdf8" text-anchor="middle" letter-spacing="0.5">WIRELESS</text>
+
+  <text x="380" y="32" font-family="monospace" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end" letter-spacing="0.5">60% COMPACT · 2.4GHZ & BLUETOOTH</text>
+
+  <!-- Main Product Render Art -->
   
-        <rect x="130" y="110" width="140" height="80" rx="8" fill="none" stroke="#2563eb" stroke-width="4"/>
-        <line x1="145" y1="130" x2="165" y2="130" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
-        <line x1="175" y1="130" x2="195" y2="130" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
-        <line x1="205" y1="130" x2="225" y2="130" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
-        <line x1="235" y1="130" x2="255" y2="130" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
-        <line x1="155" y1="150" x2="185" y2="150" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
-        <line x1="195" y1="150" x2="245" y2="150" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="200" cy="155" rx="140" ry="55" fill="#06b6d4" opacity="0.18" filter="blur(22px)"/>
+      <!-- Sleek Angled Minimal Case -->
+      <g filter="drop-shadow(0 14px 20px rgba(6, 182, 212, 0.2))">
+        <rect x="80" y="90" width="240" height="115" rx="12" fill="#030712" stroke="#164e63" stroke-width="2"/>
+        <rect x="84" y="94" width="232" height="107" rx="8" fill="#082f49" stroke="#0e7490" stroke-width="1"/>
+      </g>
+      <!-- Neon Wireless Status Bar -->
+      <line x1="88" y1="92" x2="312" y2="92" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+      <circle cx="304" cy="102" r="3" fill="#38bdf8"/>
+      <!-- Minimal Keycaps Grid (60%) -->
       
-  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Helm 60 Wireless Keyboard</text>
-  <text x="200" y="265" font-family="monospace" font-size="12" fill="#2563eb" text-anchor="middle">KB-002</text>
+        <rect x="92" y="104" width="15" height="14" rx="3" fill="#06b6d4" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="110" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="128" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="146" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="164" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="182" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="200" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="218" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="236" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="254" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="272" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="290" y="104" width="15" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+      
+        <rect x="92" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="110" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="128" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="146" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="164" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="182" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="200" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="218" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="236" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="254" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="272" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+        <rect x="290" y="122" width="15" height="14" rx="3" fill="#075985" stroke="#0284c7" stroke-width="0.8" opacity="0.9"/>
+      
+      
+        <rect x="95" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="114" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="133" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="152" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="171" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="190" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="209" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="228" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="247" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="266" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+        <rect x="285" y="140" width="16" height="14" rx="3" fill="#0c4a6e" stroke="#155e75" stroke-width="0.8"/>
+      
+      <!-- Long Cyan Spacebar -->
+      <rect x="92" y="158" width="22" height="15" rx="3" fill="#0369a1"/>
+      <rect x="118" y="158" width="20" height="15" rx="3" fill="#0c4a6e"/>
+      <rect x="142" y="158" width="116" height="15" rx="4" fill="url(#spacebar-cyan)" stroke="#06b6d4" stroke-width="1.5"/>
+      <rect x="262" y="158" width="20" height="15" rx="3" fill="#0c4a6e"/>
+      <rect x="286" y="158" width="22" height="15" rx="3" fill="#0369a1"/>
+    
+
+  <!-- Bottom Info Glow Bar -->
+  <rect x="20" y="248" width="360" height="38" rx="8" fill="#0b0f19" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="36" cy="267" r="4" fill="#06b6d4"/>
+  <text x="48" y="271" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">Helm 60 Wireless Keyboard</text>
+  <text x="368" y="271" font-family="monospace" font-size="11" font-weight="700" fill="#38bdf8" text-anchor="end">KB-002</text>
 </svg>

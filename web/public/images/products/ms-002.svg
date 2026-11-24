@@ -1,17 +1,87 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bg-ms-002" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
+      <stop offset="0%" stop-color="#134e4a" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Knob Gradient -->
+    <radialGradient id="knob-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2dd4bf" />
+      <stop offset="60%" stop-color="#14b8a6" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </radialGradient>
+
+    <!-- Spacebar Accent Gradients -->
+    <linearGradient id="spacebar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#14b8a6" />
+      <stop offset="50%" stop-color="#2dd4bf" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+
+    <linearGradient id="spacebar-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Light Bar Beam Gradient -->
+    <linearGradient id="lightbar-beam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#14b8a6" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <rect width="400" height="300" rx="12" fill="url(#bg-ms-002)" />
-  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+
+  <!-- Deep Slate Outer Chassis Canvas -->
+  <rect width="400" height="300" rx="14" fill="url(#bg-ms-002)" />
+  <rect x="1.5" y="1.5" width="397" height="297" rx="12.5" fill="none" stroke="#334155" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Subtle Blueprint Tech Grid Pattern -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="0.8">
+    <line x1="40" y1="0" x2="40" y2="300"/>
+    <line x1="80" y1="0" x2="80" y2="300"/>
+    <line x1="120" y1="0" x2="120" y2="300"/>
+    <line x1="160" y1="0" x2="160" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="300"/>
+    <line x1="240" y1="0" x2="240" y2="300"/>
+    <line x1="280" y1="0" x2="280" y2="300"/>
+    <line x1="320" y1="0" x2="320" y2="300"/>
+    <line x1="360" y1="0" x2="360" y2="300"/>
+    <line x1="0" y1="60" x2="400" y2="60"/>
+    <line x1="0" y1="120" x2="400" y2="120"/>
+    <line x1="0" y1="180" x2="400" y2="180"/>
+    <line x1="0" y1="240" x2="400" y2="240"/>
+  </g>
+
+  <!-- Top Status Bar: Category & Spec Tag -->
+  <rect x="20" y="18" width="88" height="20" rx="4" fill="#14b8a6" fill-opacity="0.2" stroke="#14b8a6" stroke-width="1"/>
+  <text x="64" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" fill="#2dd4bf" text-anchor="middle" letter-spacing="0.5">ERGONOMIC</text>
+
+  <text x="380" y="32" font-family="monospace" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end" letter-spacing="0.5">57° ERGO ANGLE · ZERO WRIST STRAIN</text>
+
+  <!-- Main Product Render Art -->
   
-        <rect x="160" y="100" width="80" height="110" rx="40" fill="none" stroke="#059669" stroke-width="4"/>
-        <line x1="200" y1="100" x2="200" y2="140" stroke="#059669" stroke-width="4"/>
-        <circle cx="200" cy="125" r="4" fill="#059669"/>
-      
-  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Ingress Vertical Mouse</text>
-  <text x="200" y="265" font-family="monospace" font-size="12" fill="#059669" text-anchor="middle">MS-002</text>
+      <ellipse cx="205" cy="155" rx="75" ry="80" fill="#14b8a6" opacity="0.2" filter="blur(22px)"/>
+      <g filter="drop-shadow(0 14px 20px rgba(20, 184, 166, 0.25))">
+        <!-- Vertical 57-degree Handshake Shell -->
+        <path d="M 165,220 C 145,210 145,160 160,120 C 172,85 205,75 225,90 C 245,105 255,145 250,185 C 245,215 210,225 165,220 Z" fill="#042f2e" stroke="#0d9488" stroke-width="2"/>
+        <!-- Palm Rest Wave -->
+        <path d="M 160,130 C 180,120 220,130 235,160 C 245,185 235,210 205,215" fill="none" stroke="#14b8a6" stroke-width="2"/>
+        <!-- Vertical Sculpted Trigger Plate -->
+        <path d="M 215,88 C 235,100 248,125 245,155 L 225,145 Z" fill="#0f766e" opacity="0.8"/>
+        <!-- Vertical Scroll Wheel -->
+        <rect x="228" y="110" width="8" height="22" rx="3" fill="#115e59" stroke="#2dd4bf" stroke-width="1.5"/>
+        <!-- Dual Forward/Back Thumb Buttons -->
+        <rect x="155" y="145" width="6" height="14" rx="2" fill="#14b8a6"/>
+        <rect x="154" y="163" width="6" height="14" rx="2" fill="#14b8a6"/>
+      </g>
+    
+
+  <!-- Bottom Info Glow Bar -->
+  <rect x="20" y="248" width="360" height="38" rx="8" fill="#0b0f19" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="36" cy="267" r="4" fill="#14b8a6"/>
+  <text x="48" y="271" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">Ingress Vertical Mouse</text>
+  <text x="368" y="271" font-family="monospace" font-size="11" font-weight="700" fill="#2dd4bf" text-anchor="end">MS-002</text>
 </svg>

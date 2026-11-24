@@ -1,17 +1,92 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bg-ms-001" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Knob Gradient -->
+    <radialGradient id="knob-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="60%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </radialGradient>
+
+    <!-- Spacebar Accent Gradients -->
+    <linearGradient id="spacebar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <linearGradient id="spacebar-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Light Bar Beam Gradient -->
+    <linearGradient id="lightbar-beam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#10b981" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <rect width="400" height="300" rx="12" fill="url(#bg-ms-001)" />
-  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+
+  <!-- Deep Slate Outer Chassis Canvas -->
+  <rect width="400" height="300" rx="14" fill="url(#bg-ms-001)" />
+  <rect x="1.5" y="1.5" width="397" height="297" rx="12.5" fill="none" stroke="#334155" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Subtle Blueprint Tech Grid Pattern -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="0.8">
+    <line x1="40" y1="0" x2="40" y2="300"/>
+    <line x1="80" y1="0" x2="80" y2="300"/>
+    <line x1="120" y1="0" x2="120" y2="300"/>
+    <line x1="160" y1="0" x2="160" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="300"/>
+    <line x1="240" y1="0" x2="240" y2="300"/>
+    <line x1="280" y1="0" x2="280" y2="300"/>
+    <line x1="320" y1="0" x2="320" y2="300"/>
+    <line x1="360" y1="0" x2="360" y2="300"/>
+    <line x1="0" y1="60" x2="400" y2="60"/>
+    <line x1="0" y1="120" x2="400" y2="120"/>
+    <line x1="0" y1="180" x2="400" y2="180"/>
+    <line x1="0" y1="240" x2="400" y2="240"/>
+  </g>
+
+  <!-- Top Status Bar: Category & Spec Tag -->
+  <rect x="20" y="18" width="72" height="20" rx="4" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="1"/>
+  <text x="56" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" fill="#34d399" text-anchor="middle" letter-spacing="0.5">POPULAR</text>
+
+  <text x="380" y="32" font-family="monospace" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end" letter-spacing="0.5">4000HZ POLLING · PAW3395 SENSOR</text>
+
+  <!-- Main Product Render Art -->
   
-        <rect x="160" y="100" width="80" height="110" rx="40" fill="none" stroke="#10b981" stroke-width="4"/>
-        <line x1="200" y1="100" x2="200" y2="140" stroke="#10b981" stroke-width="4"/>
-        <circle cx="200" cy="125" r="4" fill="#10b981"/>
-      
-  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Orbit Ergonomic Mouse</text>
-  <text x="200" y="265" font-family="monospace" font-size="12" fill="#10b981" text-anchor="middle">MS-001</text>
+      <ellipse cx="200" cy="155" rx="80" ry="75" fill="#10b981" opacity="0.2" filter="blur(24px)"/>
+      <g filter="drop-shadow(0 14px 22px rgba(16, 185, 129, 0.25))">
+        <!-- Ergonomic Palm Contour with Thumb Wing -->
+        <path d="M 170,85 C 190,80 220,85 235,105 C 248,122 250,155 245,185 C 240,205 220,225 195,225 C 170,225 155,210 150,185 C 142,165 140,150 148,135 C 153,125 155,115 160,100 Z" fill="#06281e" stroke="#059669" stroke-width="2"/>
+        <!-- Textured Thumb Rest Flare -->
+        <path d="M 150,145 C 135,160 135,185 148,195 C 155,188 152,165 150,145 Z" fill="#047857" opacity="0.85"/>
+        <!-- Split Click Buttons -->
+        <path d="M 172,85 C 185,82 196,82 198,130 L 170,130 Z" fill="#0f3d2e" stroke="#10b981" stroke-width="1"/>
+        <path d="M 202,82 C 215,82 232,95 235,130 L 202,130 Z" fill="#0f3d2e" stroke="#10b981" stroke-width="1"/>
+        <!-- Metallic Textured Scroll Wheel -->
+        <rect x="194" y="95" width="12" height="26" rx="4" fill="#022c22" stroke="#34d399" stroke-width="1.8"/>
+        <line x1="194" y1="102" x2="206" y2="102" stroke="#10b981" stroke-width="1.5"/>
+        <line x1="194" y1="108" x2="206" y2="108" stroke="#10b981" stroke-width="1.5"/>
+        <line x1="194" y1="114" x2="206" y2="114" stroke="#10b981" stroke-width="1.5"/>
+        <!-- RGB Sensor Accent Line -->
+        <path d="M 165,155 C 190,175 220,170 238,150" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- DPI Status LED -->
+        <circle cx="200" cy="138" r="3" fill="#34d399"/>
+      </g>
+    
+
+  <!-- Bottom Info Glow Bar -->
+  <rect x="20" y="248" width="360" height="38" rx="8" fill="#0b0f19" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="36" cy="267" r="4" fill="#10b981"/>
+  <text x="48" y="271" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">Orbit Ergonomic Mouse</text>
+  <text x="368" y="271" font-family="monospace" font-size="11" font-weight="700" fill="#34d399" text-anchor="end">MS-001</text>
 </svg>

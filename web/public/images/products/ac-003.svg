@@ -1,16 +1,89 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bg-ac-003" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
+      <stop offset="0%" stop-color="#422006" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Knob Gradient -->
+    <radialGradient id="knob-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="60%" stop-color="#eab308" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </radialGradient>
+
+    <!-- Spacebar Accent Gradients -->
+    <linearGradient id="spacebar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#eab308" />
+      <stop offset="50%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+
+    <linearGradient id="spacebar-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Light Bar Beam Gradient -->
+    <linearGradient id="lightbar-beam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#eab308" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#eab308" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <rect width="400" height="300" rx="12" fill="url(#bg-ac-003)" />
-  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+
+  <!-- Deep Slate Outer Chassis Canvas -->
+  <rect width="400" height="300" rx="14" fill="url(#bg-ac-003)" />
+  <rect x="1.5" y="1.5" width="397" height="297" rx="12.5" fill="none" stroke="#334155" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Subtle Blueprint Tech Grid Pattern -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="0.8">
+    <line x1="40" y1="0" x2="40" y2="300"/>
+    <line x1="80" y1="0" x2="80" y2="300"/>
+    <line x1="120" y1="0" x2="120" y2="300"/>
+    <line x1="160" y1="0" x2="160" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="300"/>
+    <line x1="240" y1="0" x2="240" y2="300"/>
+    <line x1="280" y1="0" x2="280" y2="300"/>
+    <line x1="320" y1="0" x2="320" y2="300"/>
+    <line x1="360" y1="0" x2="360" y2="300"/>
+    <line x1="0" y1="60" x2="400" y2="60"/>
+    <line x1="0" y1="120" x2="400" y2="120"/>
+    <line x1="0" y1="180" x2="400" y2="180"/>
+    <line x1="0" y1="240" x2="400" y2="240"/>
+  </g>
+
+  <!-- Top Status Bar: Category & Spec Tag -->
+  <rect x="20" y="18" width="80" height="20" rx="4" fill="#eab308" fill-opacity="0.2" stroke="#eab308" stroke-width="1"/>
+  <text x="60" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" fill="#fef08a" text-anchor="middle" letter-spacing="0.5">EYE CARE</text>
+
+  <text x="380" y="32" font-family="monospace" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end" letter-spacing="0.5">AUTO-DIMMING · ZERO SCREEN GLARE</text>
+
+  <!-- Main Product Render Art -->
   
-        <rect x="120" y="145" width="160" height="10" rx="5" fill="#b45309"/>
-        <path d="M140,165 L130,195 M200,165 L200,200 M260,165 L270,195" stroke="#b45309" stroke-width="3" stroke-linecap="round"/>
-      
-  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Namespace Monitor Light Bar</text>
-  <text x="200" y="265" font-family="monospace" font-size="12" fill="#b45309" text-anchor="middle">AC-003</text>
+      <!-- Ambient Glow Fan Beam -->
+      <polygon points="200,95 70,225 330,225" fill="url(#lightbar-beam)" opacity="0.45"/>
+      <ellipse cx="200" cy="225" rx="130" ry="20" fill="#eab308" opacity="0.25" filter="blur(16px)"/>
+      <g filter="drop-shadow(0 12px 18px rgba(234, 179, 8, 0.3))">
+        <!-- Counterweight Clamp Mount -->
+        <rect x="185" y="70" width="30" height="25" rx="4" fill="#1c1917" stroke="#78350f" stroke-width="1.5"/>
+        <circle cx="200" cy="82" r="6" fill="#292524" stroke="#eab308" stroke-width="1"/>
+        <!-- Main Aluminum Light Bar Tube -->
+        <rect x="60" y="90" width="280" height="14" rx="7" fill="#181308" stroke="#ca8a04" stroke-width="2"/>
+        <!-- Illuminated Warm Asymmetric LED Strip -->
+        <rect x="70" y="98" width="260" height="4" rx="2" fill="#fef08a"/>
+        <!-- Capacitive Touch Controls on Top -->
+        <circle cx="160" cy="94" r="2" fill="#fef08a"/>
+        <circle cx="200" cy="94" r="2.5" fill="#ffffff"/>
+        <circle cx="240" cy="94" r="2" fill="#fef08a"/>
+      </g>
+    
+
+  <!-- Bottom Info Glow Bar -->
+  <rect x="20" y="248" width="360" height="38" rx="8" fill="#0b0f19" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="36" cy="267" r="4" fill="#eab308"/>
+  <text x="48" y="271" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">Namespace Monitor Light Bar</text>
+  <text x="368" y="271" font-family="monospace" font-size="11" font-weight="700" fill="#fef08a" text-anchor="end">AC-003</text>
 </svg>

@@ -1,17 +1,107 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bg-ms-003" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+
+    <!-- Knob Gradient -->
+    <radialGradient id="knob-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="60%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </radialGradient>
+
+    <!-- Spacebar Accent Gradients -->
+    <linearGradient id="spacebar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <linearGradient id="spacebar-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Light Bar Beam Gradient -->
+    <linearGradient id="lightbar-beam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#059669" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#059669" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <rect width="400" height="300" rx="12" fill="url(#bg-ms-003)" />
-  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+
+  <!-- Deep Slate Outer Chassis Canvas -->
+  <rect width="400" height="300" rx="14" fill="url(#bg-ms-003)" />
+  <rect x="1.5" y="1.5" width="397" height="297" rx="12.5" fill="none" stroke="#334155" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Subtle Blueprint Tech Grid Pattern -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="0.8">
+    <line x1="40" y1="0" x2="40" y2="300"/>
+    <line x1="80" y1="0" x2="80" y2="300"/>
+    <line x1="120" y1="0" x2="120" y2="300"/>
+    <line x1="160" y1="0" x2="160" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="300"/>
+    <line x1="240" y1="0" x2="240" y2="300"/>
+    <line x1="280" y1="0" x2="280" y2="300"/>
+    <line x1="320" y1="0" x2="320" y2="300"/>
+    <line x1="360" y1="0" x2="360" y2="300"/>
+    <line x1="0" y1="60" x2="400" y2="60"/>
+    <line x1="0" y1="120" x2="400" y2="120"/>
+    <line x1="0" y1="180" x2="400" y2="180"/>
+    <line x1="0" y1="240" x2="400" y2="240"/>
+  </g>
+
+  <!-- Top Status Bar: Category & Spec Tag -->
+  <rect x="20" y="18" width="80" height="20" rx="4" fill="#059669" fill-opacity="0.2" stroke="#059669" stroke-width="1"/>
+  <text x="60" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" fill="#10b981" text-anchor="middle" letter-spacing="0.5">52 GRAMS</text>
+
+  <text x="380" y="32" font-family="monospace" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end" letter-spacing="0.5">52G ULTRA-LIGHT · PTFE GLIDES</text>
+
+  <!-- Main Product Render Art -->
   
-        <rect x="160" y="100" width="80" height="110" rx="40" fill="none" stroke="#047857" stroke-width="4"/>
-        <line x1="200" y1="100" x2="200" y2="140" stroke="#047857" stroke-width="4"/>
-        <circle cx="200" cy="125" r="4" fill="#047857"/>
-      
-  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Sidecar Compact Mouse</text>
-  <text x="200" y="265" font-family="monospace" font-size="12" fill="#047857" text-anchor="middle">MS-003</text>
+      <ellipse cx="200" cy="155" rx="70" ry="70" fill="#059669" opacity="0.18" filter="blur(20px)"/>
+      <g filter="drop-shadow(0 12px 18px rgba(5, 150, 105, 0.25))">
+        <!-- Symmetrical Ambidextrous Shell -->
+        <path d="M 175,85 C 190,80 210,80 225,85 C 242,105 248,145 242,185 C 236,215 218,225 200,225 C 182,225 164,215 158,185 C 152,145 158,105 175,85 Z" fill="#022c22" stroke="#047857" stroke-width="2"/>
+        <!-- Honeycomb Hex Cutouts for Weight Reduction -->
+        
+          <polygon points="190,156 194,158 194,162 190,164 186,162 186,158" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="200,151 204,153 204,157 200,159 196,157 196,153" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="210,156 214,158 214,162 210,164 206,162 206,158" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="185,168 189,170 189,174 185,176 181,174 181,170" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="195,163 199,165 199,169 195,171 191,169 191,165" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="205,163 209,165 209,169 205,171 201,169 201,165" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="215,168 219,170 219,174 215,176 211,174 211,170" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="190,180 194,182 194,186 190,188 186,186 186,182" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="200,175 204,177 204,181 200,183 196,181 196,177" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="210,180 214,182 214,186 210,188 206,186 206,182" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="195,192 199,194 199,198 195,200 191,198 191,194" fill="#10b981" opacity="0.4"/>
+        
+          <polygon points="205,192 209,194 209,198 205,200 201,198 201,194" fill="#10b981" opacity="0.4"/>
+        
+        <!-- Click Separation -->
+        <line x1="200" y1="83" x2="200" y2="125" stroke="#047857" stroke-width="1.5"/>
+        <rect x="195" y="92" width="10" height="20" rx="3" fill="#064e3b" stroke="#059669" stroke-width="1.5"/>
+      </g>
+    
+
+  <!-- Bottom Info Glow Bar -->
+  <rect x="20" y="248" width="360" height="38" rx="8" fill="#0b0f19" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="36" cy="267" r="4" fill="#059669"/>
+  <text x="48" y="271" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">Sidecar Compact Mouse</text>
+  <text x="368" y="271" font-family="monospace" font-size="11" font-weight="700" fill="#10b981" text-anchor="end">MS-003</text>
 </svg>

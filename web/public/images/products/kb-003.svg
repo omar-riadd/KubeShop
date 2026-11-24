@@ -1,21 +1,169 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bg-kb-003" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Knob Gradient -->
+    <radialGradient id="knob-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="60%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </radialGradient>
+
+    <!-- Spacebar Accent Gradients -->
+    <linearGradient id="spacebar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+
+    <linearGradient id="spacebar-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Light Bar Beam Gradient -->
+    <linearGradient id="lightbar-beam" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#6366f1" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <rect width="400" height="300" rx="12" fill="url(#bg-kb-003)" />
-  <rect x="1" y="1" width="398" height="298" rx="11" fill="none" stroke="#334155" stroke-width="1" />
+
+  <!-- Deep Slate Outer Chassis Canvas -->
+  <rect width="400" height="300" rx="14" fill="url(#bg-kb-003)" />
+  <rect x="1.5" y="1.5" width="397" height="297" rx="12.5" fill="none" stroke="#334155" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Subtle Blueprint Tech Grid Pattern -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="0.8">
+    <line x1="40" y1="0" x2="40" y2="300"/>
+    <line x1="80" y1="0" x2="80" y2="300"/>
+    <line x1="120" y1="0" x2="120" y2="300"/>
+    <line x1="160" y1="0" x2="160" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="300"/>
+    <line x1="240" y1="0" x2="240" y2="300"/>
+    <line x1="280" y1="0" x2="280" y2="300"/>
+    <line x1="320" y1="0" x2="320" y2="300"/>
+    <line x1="360" y1="0" x2="360" y2="300"/>
+    <line x1="0" y1="60" x2="400" y2="60"/>
+    <line x1="0" y1="120" x2="400" y2="120"/>
+    <line x1="0" y1="180" x2="400" y2="180"/>
+    <line x1="0" y1="240" x2="400" y2="240"/>
+  </g>
+
+  <!-- Top Status Bar: Category & Spec Tag -->
+  <rect x="20" y="18" width="104" height="20" rx="4" fill="#6366f1" fill-opacity="0.2" stroke="#6366f1" stroke-width="1"/>
+  <text x="72" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="800" fill="#818cf8" text-anchor="middle" letter-spacing="0.5">LOW PROFILE</text>
+
+  <text x="380" y="32" font-family="monospace" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="end" letter-spacing="0.5">TKL · ULTRA-SLIM ERGONOMIC</text>
+
+  <!-- Main Product Render Art -->
   
-        <rect x="130" y="110" width="140" height="80" rx="8" fill="none" stroke="#1d4ed8" stroke-width="4"/>
-        <line x1="145" y1="130" x2="165" y2="130" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
-        <line x1="175" y1="130" x2="195" y2="130" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
-        <line x1="205" y1="130" x2="225" y2="130" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
-        <line x1="235" y1="130" x2="255" y2="130" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
-        <line x1="155" y1="150" x2="185" y2="150" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
-        <line x1="195" y1="150" x2="245" y2="150" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="200" cy="155" rx="145" ry="50" fill="#6366f1" opacity="0.16" filter="blur(20px)"/>
+      <!-- Ultra-thin Aluminium Body -->
+      <g filter="drop-shadow(0 12px 18px rgba(99, 102, 241, 0.22))">
+        <rect x="65" y="95" width="270" height="105" rx="8" fill="#0f0f23" stroke="#312e81" stroke-width="2"/>
+        <rect x="68" y="98" width="264" height="99" rx="6" fill="#181838"/>
+      </g>
+      <!-- Beveled Chamfer Edge -->
+      <line x1="68" y1="98" x2="332" y2="98" stroke="#4338ca" stroke-width="1.5"/>
+      <!-- Chiclet Keycaps -->
       
-  <text x="200" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#94a3b8" text-anchor="middle">Pod TKL Low-Profile Keyboard</text>
-  <text x="200" y="265" font-family="monospace" font-size="12" fill="#1d4ed8" text-anchor="middle">KB-003</text>
+        <rect x="76" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="95" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="114" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="133" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="152" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="171" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="190" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="209" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="228" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="247" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="266" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="285" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="304" y="106" width="16" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+      
+        <rect x="76" y="122" width="16" height="12" rx="2.5" fill="#6366f1" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="95" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="114" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="133" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="152" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="171" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="190" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="209" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="228" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="247" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="266" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="285" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+        <rect x="304" y="122" width="16" height="12" rx="2.5" fill="#1e1b4b" stroke="#3730a3" stroke-width="0.8"/>
+      
+      
+        <rect x="80" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="100" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="120" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="140" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="160" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="180" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="200" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="220" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="240" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="260" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="280" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+        <rect x="300" y="138" width="17" height="12" rx="2.5" fill="#2e2b69" stroke="#4338ca" stroke-width="0.8"/>
+      
+      <!-- Low profile Spacebar and Navigation Block -->
+      <rect x="76" y="154" width="24" height="13" rx="2.5" fill="#312e81"/>
+      <rect x="104" y="154" width="128" height="13" rx="3" fill="#6366f1" opacity="0.9"/>
+      <rect x="236" y="154" width="24" height="13" rx="2.5" fill="#312e81"/>
+      <!-- TKL Cluster Keys -->
+      <rect x="268" y="154" width="18" height="13" rx="2.5" fill="#4338ca"/>
+      <rect x="290" y="154" width="18" height="13" rx="2.5" fill="#4338ca"/>
+      <rect x="312" y="154" width="18" height="13" rx="2.5" fill="#818cf8"/>
+    
+
+  <!-- Bottom Info Glow Bar -->
+  <rect x="20" y="248" width="360" height="38" rx="8" fill="#0b0f19" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+  <circle cx="36" cy="267" r="4" fill="#6366f1"/>
+  <text x="48" y="271" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">Pod TKL Low-Profile Keyboard</text>
+  <text x="368" y="271" font-family="monospace" font-size="11" font-weight="700" fill="#818cf8" text-anchor="end">KB-003</text>
 </svg>
