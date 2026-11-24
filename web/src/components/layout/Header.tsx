@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, Sun, Moon, Laptop, Menu, X, Terminal } from 'lucide-react';
 import { useCart } from '../../api/cart';
+import { useCartDrawer } from '../../context/CartDrawerContext';
 import { useRuntimeConfig } from '../../api/runtimeConfig';
 import { getStoredTheme, setTheme, type Theme } from '../../lib/theme';
 import { Badge } from '../ui/Badge';
@@ -9,6 +10,7 @@ import { IconButton } from '../ui/IconButton';
 
 export const Header: React.FC = () => {
   const { data: cart } = useCart();
+  const { openDrawer } = useCartDrawer();
   const { data: runtimeConfig } = useRuntimeConfig();
   const [currentTheme, setCurrentTheme] = useState<Theme>(getStoredTheme());
   const [menuOpen, setMenuOpen] = useState(false);
@@ -105,6 +107,12 @@ export const Header: React.FC = () => {
             to="/cart"
             data-testid="cart-link"
             aria-label={`Shopping cart with ${itemCount} items`}
+            onClick={(e) => {
+              if (location.pathname !== '/cart') {
+                e.preventDefault();
+                openDrawer();
+              }
+            }}
             className="relative inline-flex items-center justify-center w-10 h-10 rounded-sm hover:bg-border/20 transition-colors text-text"
           >
             <ShoppingCart className="w-5 h-5" />

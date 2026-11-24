@@ -3,6 +3,7 @@ import { render, type RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ToastProvider } from '../components/ui/Toast';
+import { CartDrawerProvider } from '../context/CartDrawerContext';
 
 interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string;
@@ -36,7 +37,9 @@ export function renderWithProviders(
   return render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <MemoryRouter initialEntries={[route]}>{content}</MemoryRouter>
+        <CartDrawerProvider>
+          <MemoryRouter initialEntries={[route]}>{content}</MemoryRouter>
+        </CartDrawerProvider>
       </ToastProvider>
     </QueryClientProvider>,
     options

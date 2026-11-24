@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ShoppingCart, Check } from 'lucide-react';
-import { useProduct } from '../api/catalog';
+import { ArrowLeft, ShoppingCart, Check, SlidersHorizontal } from 'lucide-react';
+import { useProduct, useProducts } from '../api/catalog';
 import { useAddToCart } from '../api/cart';
+import { useCartDrawer } from '../context/CartDrawerContext';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -12,17 +13,24 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { Money } from '../components/ui/Money';
 import { NotFoundPage } from './NotFoundPage';
 import { getUserErrorMessage } from '../api/errors';
+import { WhatsInTheBox } from '../components/product/WhatsInTheBox';
+import { SpecComparisonModal } from '../components/product/SpecComparisonModal';
+import { BundleOffer } from '../components/product/BundleOffer';
+import { StickyQuickBuy } from '../components/product/StickyQuickBuy';
 
 export const ProductPage: React.FC = () => {
   const { id = '' } = useParams<{ id: string }>();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [specModalOpen, setSpecModalOpen] = useState(false);
 
   // Validate ID format before calling API per §7
   const isValidId = /^[a-z]{2}-\d{3}$/.test(id);
 
   const { data: product, isLoading, error, refetch } = useProduct(isValidId ? id : '');
+  const { data: productsData } = useProducts({ limit: 50 });
   const addToCartMutation = useAddToCart();
+  const { openDrawer } = useCartDrawer();
   const { showToast } = useToast();
 
   if (!isValidId) {
@@ -63,6 +71,7 @@ export const ProductPage: React.FC = () => {
         type: 'success',
         message: `Added ${quantity} × ${product.name} to cart.`,
       });
+      openDrawer();
       setTimeout(() => setAdded(false), 2000);
     } catch (err: unknown) {
       const { message, requestId } = getUserErrorMessage(err);
@@ -145,7 +154,7 @@ export const ProductPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div id="main-add-to-cart-container" className="space-y-4">
             <div className="flex items-center gap-4">
               <label htmlFor="qty-input" className="text-sm font-medium text-text">
                 Quantity:
@@ -160,19 +169,58 @@ export const ProductPage: React.FC = () => {
               />
             </div>
 
-            <Button
-              data-testid="add-to-cart"
-              size="lg"
-              className="w-full sm:w-auto min-w-48 gap-2"
-              onClick={handleAddToCart}
-              loading={addToCartMutation.isPending}
-            >
-              {added ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
-              {added ? 'Added!' : 'Add to cart'}
-            </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <Button
+                data-testid="add-to-cart"
+                size="lg"
+                className="w-full sm:w-auto min-w-48 gap-2 font-bold"
+                onClick={handleAddToCart}
+                loading={addToCartMutation.isPending}
+              >
+                {added ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+                {added ? 'Added!' : 'Add to cart'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => setSpecModalOpen(true)}
+                className="gap-2 text-xs font-semibold"
+                data-testid="compare-specs-button"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Compare Specs
+              </Button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Frequently Bought Together Bundle */}
+      <BundleOffer currentProduct={product} allProducts={productsData?.items || []} />
+
+      {/* What's in the Box Unboxing Grid */}
+      <WhatsInTheBox product={product} />
+
+      {/* Side-by-Side Model Comparison Modal */}
+      <SpecComparisonModal
+        open={specModalOpen}
+        onClose={() => setSpecModalOpen(false)}
+        currentProduct={product}
+        allProducts={productsData?.items || []}
+      />
+
+      {/* Sticky Quick-Buy Scroll Bar */}
+      <StickyQuickBuy
+        product={product}
+        quantity={quantity}
+        onQuantityChange={setQuantity}
+        onAddToCart={handleAddToCart}
+        loading={addToCartMutation.isPending}
+        added={added}
+        targetRefId="main-add-to-cart-container"
+      />
     </div>
   );
 };

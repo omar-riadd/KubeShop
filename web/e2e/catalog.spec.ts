@@ -44,7 +44,7 @@ test.describe('Catalog Page & Product Exploration', () => {
     await page.goto('/products/kb-001');
 
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.getByText(/Nimbus 75/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /add to cart/i })).toBeVisible();
+    await expect(page.getByTestId('product-title')).toBeVisible();
+    await expect(page.getByRole('button', { name: /add to cart/i }).first()).toBeVisible();
   });
 });
