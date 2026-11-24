@@ -154,7 +154,6 @@ kubeshop/
 ├── .env.bootstrap.example               # Template for automated placeholder bootstrap (`make bootstrap`)
 ├── docker-compose.yml                   # Local multi-service development stack
 ├── Makefile                             # Common developer targets (dev, test, bootstrap, cluster-down)
-├── PROGRESS.md                          # Milestone-by-milestone implementation checklist
 └── renovate.json                        # Renovate automated dependency configuration
 ```
 
@@ -230,8 +229,7 @@ For initial repository and cloud onboarding, see the [Repository Setup Runbook](
 
 ## 6. Documentation & Runbooks
 
-- **Architecture & Decisions**: [System Architecture](docs/architecture.md) · [ADRs (0001–0008)](docs/adr/README.md) · [UI Design Notes](docs/ui/design-notes.md)
-- **Improvement Roadmap**: [14-Step Improvement Plan](improve-plan.md) (14/14 steps complete — ALL STEPS COMPLETED; 18 audit findings resolved across pipeline, security, perf, reliability, quality, and DX)
+- **Architecture & Decisions**: [System Architecture](docs/architecture.md) · [ADRs (0001–0008)](docs/adr/README.md) · [UI Design Notes](docs/ui/design-notes.md) · [Shared Contract Changes](docs/CONTRACT-CHANGES.md)
 - **Demos & FinOps**: [5-Minute Demo Script](docs/demo-script.md) · [Incident & Canary Demo](docs/incident-demo.md) · [FinOps Cost Analysis](docs/cost.md)
 - **Operational Runbooks**:
   - [Repository Setup](docs/runbooks/repo-setup.md) · [Cluster Bootstrap](docs/runbooks/bootstrap.md) · [GitOps Promotion](docs/runbooks/promotion.md)

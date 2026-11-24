@@ -19,7 +19,7 @@ export const options = {
     { duration: '30s', target: 0 },  // Graceful ramp-down
   ],
   thresholds: {
-    // SLO constraints from plan.md §14
+    // SLO constraints: error rate < 1%, latency p95 < 500ms
     http_req_failed: ['rate<0.01'],    // Error rate must stay below 1%
     http_req_duration: ['p(95)<500'],  // 95% of requests must complete in < 500ms
   },

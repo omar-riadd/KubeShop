@@ -13,6 +13,4 @@ regexes = [
 ]
 paths = [
   '''^docs/PLACEHOLDERS\.md$''',
-  '''^plan\.md$''',
-  '''^ui\.md$''',
 ]

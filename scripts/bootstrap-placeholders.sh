@@ -54,7 +54,6 @@ collect_files() {
     -type f \
     \( -name '*.yaml' -o -name '*.yml' -o -name '*.tf' -o -name '*.json' -o -name '*.md' -o -name 'Dockerfile' -o -name 'CODEOWNERS' \) \
     ! -path "${ROOT_DIR}/docs/PLACEHOLDERS.md" \
-    ! -path "${ROOT_DIR}/docs/progress/*" \
     ! -name '*.example' \
     -print | sort
 }

@@ -14,8 +14,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "gen:api": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts",
-    "generate:images": "node scripts/generate-product-images.mjs"
+    "gen:api": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.1.1",
