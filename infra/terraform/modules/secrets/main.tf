@@ -40,6 +40,35 @@ resource "aws_secretsmanager_secret_version" "redis" {
 }
 
 # ---------------------------------------------------------------------------
+# Per-environment Orders admin Bearer tokens: kubeshop/<env>/orders-admin
+# ---------------------------------------------------------------------------
+resource "random_password" "orders_admin" {
+  for_each = var.environments
+
+  length  = 32
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "orders_admin" {
+  for_each = var.environments
+
+  name                    = "kubeshop/${each.key}/orders-admin"
+  description             = "Admin Bearer token for KubeShop orders service in ${each.key} environment."
+  kms_key_id              = aws_kms_key.secrets.arn
+  recovery_window_in_days = var.recovery_window_in_days
+  tags                    = var.tags
+}
+
+resource "aws_secretsmanager_secret_version" "orders_admin" {
+  for_each = var.environments
+
+  secret_id = aws_secretsmanager_secret.orders_admin[each.key].id
+  secret_string = jsonencode({
+    token = random_password.orders_admin[each.key].result
+  })
+}
+
+# ---------------------------------------------------------------------------
 # Platform Slack webhook: kubeshop/platform/slack-webhook
 # ---------------------------------------------------------------------------
 resource "aws_secretsmanager_secret" "slack_webhook" {

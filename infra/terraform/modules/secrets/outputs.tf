@@ -8,6 +8,11 @@ output "redis_secret_arns" {
   value       = { for env, secret in aws_secretsmanager_secret.redis : env => secret.arn }
 }
 
+output "orders_admin_secret_arns" {
+  description = "Map of environment name to Orders admin token Secrets Manager ARN."
+  value       = { for env, secret in aws_secretsmanager_secret.orders_admin : env => secret.arn }
+}
+
 output "slack_webhook_secret_arn" {
   description = "ARN of the Slack webhook secret."
   value       = aws_secretsmanager_secret.slack_webhook.arn

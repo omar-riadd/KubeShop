@@ -41,6 +41,7 @@ output "secrets_manager_arns" {
   description = "ARNs of AWS Secrets Manager secrets provisioned for KubeShop."
   value = {
     redis         = module.secrets.redis_secret_arns
+    orders_admin  = module.secrets.orders_admin_secret_arns
     slack_webhook = module.secrets.slack_webhook_secret_arn
     grafana_admin = module.secrets.grafana_admin_secret_arn
   }

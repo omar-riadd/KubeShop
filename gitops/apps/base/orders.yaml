@@ -39,6 +39,9 @@ secretEnv:
   - name: DATABASE_URL
     secretName: orders-db-app
     key: uri
+  - name: ADMIN_AUTH_TOKEN
+    secretName: orders-admin
+    key: token
 
 route:
   enabled: true
